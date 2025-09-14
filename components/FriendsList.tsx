@@ -1,0 +1,407 @@
+import React, { useState, useEffect } from 'react';
+import { useFriendsStatus } from '../hooks/useFriendsStatus';
+import { QRCodeModal } from './QRCodeModal';
+import { Friend, Identity } from '../types';
+import { InputSanitizer } from '../utils/sanitizer';
+
+interface FriendsListProps {
+  currentIdentity: Identity;
+  peerInstance: any;
+  onStartAudioCall: (peerId: string) => void;
+  onStartVideoCall: (peerId: string) => void;
+  onStartChat?: (peerId: string, username: string) => void;
+}
+
+export const FriendsList: React.FC<FriendsListProps> = ({ 
+  currentIdentity, 
+  peerInstance,
+  onStartAudioCall,
+  onStartVideoCall,
+  onStartChat
+}) => {
+  const [newFriendId, setNewFriendId] = useState('');
+  const [newFriendName, setNewFriendName] = useState('');
+  const [error, setError] = useState('');
+  const [notification, setNotification] = useState('');
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [qrMode, setQrMode] = useState<'generate' | 'scan'>('generate');
+  const [currentTime, setCurrentTime] = useState(Date.now());
+
+  const { friends, setFriends, checkFriendStatus } = useFriendsStatus(
+    currentIdentity.peerId,
+    peerInstance
+  );
+
+  // Update current time every minute for relative time display
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 60000); // Update every minute
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const handleFriendAdded = (event: any) => {
+      const { fromPeerId, fromUsername } = event.detail;
+      const exists = friends.some(f => f.peerId === fromPeerId);
+      if (!exists) {
+        const newFriend: Friend = {
+          peerId: fromPeerId,
+          username: fromUsername,
+          addedTime: Date.now(),
+          lastSeen: Date.now(),
+          isOnline: true,
+        };
+        setFriends(prevFriends => [...prevFriends, newFriend]);
+      }
+    };
+
+    window.addEventListener('friendAdded', handleFriendAdded);
+    return () => {
+      window.removeEventListener('friendAdded', handleFriendAdded);
+    };
+  }, [friends, setFriends]);
+
+  const addFriend = async () => {
+    if (!newFriendId.trim() || !newFriendName.trim()) {
+      setError('Please enter both Peer ID and username');
+      return;
+    }
+
+    const friendId = newFriendId.trim();
+    const friendName = newFriendName.trim();
+
+    if (friendId === currentIdentity.peerId) {
+      setError('Cannot add yourself as friend');
+      return;
+    }
+
+    // 放宽验证规则
+    if (!InputSanitizer.isValidPeerId(friendId)) {
+      setError('Invalid Peer ID format. Please check and try again.');
+      return;
+    }
+
+    const exists = friends.some(f => f.peerId === friendId);
+    if (exists) {
+      setError('Friend already exists');
+      return;
+    }
+
+    // 显示加载状态
+    setError('');
+    setNotification('Adding friend...');
+
+    const newFriend: Friend = {
+      peerId: friendId,
+      username: friendName,
+      addedTime: Date.now(),
+      lastSeen: Date.now(), // 设置为当前时间而不是0
+      isOnline: false
+    };
+
+    setFriends([...friends, newFriend]);
+    setNewFriendId('');
+    setNewFriendName('');
+    
+    // 立即检查好友状态
+    try {
+      // 等待一下让状态更新生效
+      setTimeout(async () => {
+        await checkFriendStatus(newFriend);
+        console.log(`🔄 Checking status for newly added friend: ${newFriend.username}`);
+      }, 500);
+      
+      setNotification('Friend added successfully!');
+      
+      // 通知对方
+      if (peerInstance && peerInstance.open) {
+        try {
+          const conn = peerInstance.connect(friendId, {
+            metadata: { type: 'friend_request' }
+          });
+          
+          const timeout = setTimeout(() => {
+            conn.close();
+            console.log('Friend notification timeout');
+          }, 5000);
+          
+          conn.on('open', () => {
+            clearTimeout(timeout);
+            conn.send({
+              type: 'friend_added',
+              fromPeerId: currentIdentity.peerId,
+              fromUsername: currentIdentity.username,
+              timestamp: Date.now()
+            });
+            
+            setTimeout(() => conn.close(), 1000);
+            setNotification('Friend added and notified successfully!');
+          });
+
+          conn.on('error', (err) => {
+            clearTimeout(timeout);
+            console.warn('Failed to notify friend:', err);
+            setNotification('Friend added, but they may need to add you back manually.');
+          });
+        } catch (error) {
+          console.warn('Failed to connect for notification:', error);
+          setNotification('Friend added, but notification failed. They may need to add you back.');
+        }
+      } else {
+        setNotification('Friend added, but you\'re offline. Notification will be sent when connected.');
+      }
+      
+      // 清除通知
+      setTimeout(() => setNotification(''), 3000);
+      
+    } catch (error) {
+      console.error('Failed to check friend status:', error);
+      setNotification('Friend added, but status check failed.');
+      setTimeout(() => setNotification(''), 3000);
+    }
+  };
+
+  const removeFriend = (peerId: string) => {
+    const updatedFriends = friends.filter(f => f.peerId !== peerId);
+    setFriends(updatedFriends);
+  };
+
+  const handleQRScanned = async (peerId: string, username: string) => {
+    if (peerId === currentIdentity.peerId) {
+      setError('Cannot add yourself as friend');
+      return;
+    }
+
+    const exists = friends.some(f => f.peerId === peerId);
+    if (exists) {
+      setError('Friend already exists');
+      return;
+    }
+
+    setError('');
+    setNotification('Adding friend from QR code...');
+
+    const newFriend: Friend = {
+      peerId,
+      username,
+      addedTime: Date.now(),
+      lastSeen: Date.now(), // QR码扫描添加的好友也设置为当前时间
+      isOnline: false
+    };
+
+    setFriends([...friends, newFriend]);
+    
+    try {
+      await checkFriendStatus(newFriend);
+      setNotification('Friend added successfully via QR code!');
+      
+      // 通知对方
+      if (peerInstance && peerInstance.open) {
+        try {
+          const conn = peerInstance.connect(peerId, {
+            metadata: { type: 'friend_request' }
+          });
+          
+          const timeout = setTimeout(() => {
+            conn.close();
+          }, 5000);
+          
+          conn.on('open', () => {
+            clearTimeout(timeout);
+            conn.send({
+              type: 'friend_added',
+              fromPeerId: currentIdentity.peerId,
+              fromUsername: currentIdentity.username,
+              timestamp: Date.now()
+            });
+            
+            setTimeout(() => conn.close(), 1000);
+            setNotification('QR friend added and notified successfully!');
+          });
+
+          conn.on('error', (err) => {
+            clearTimeout(timeout);
+            console.warn('Failed to notify QR friend:', err);
+            setNotification('QR friend added, but notification failed.');
+          });
+        } catch (error) {
+          console.warn('Failed to connect to QR friend:', error);
+          setNotification('QR friend added, but they may need to add you back.');
+        }
+      }
+      
+      setTimeout(() => setNotification(''), 3000);
+      
+    } catch (error) {
+      console.error('Failed to process QR friend:', error);
+      setNotification('QR friend added, but status check failed.');
+      setTimeout(() => setNotification(''), 3000);
+    }
+  };
+
+  const formatLastSeen = (timestamp: number) => {
+    if (timestamp === 0) return 'Never seen';
+    const diff = currentTime - timestamp;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) return `${days}d ago`;
+    if (hours > 0) return `${hours}h ago`;
+    if (minutes > 0) return `${minutes}m ago`;
+    return 'Just now';
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Add Friend */}
+      <div className="space-y-2">
+        <h3 className="text-sm font-medium text-slate-300">Add Friend</h3>
+        <input
+          type="text"
+          value={newFriendId}
+          onChange={(e) => {
+            setNewFriendId(e.target.value);
+            setError('');
+          }}
+          placeholder="Friend's Peer ID"
+          className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-slate-100 text-xs"
+        />
+        <input
+          type="text"
+          value={newFriendName}
+          onChange={(e) => {
+            setNewFriendName(e.target.value);
+            setError('');
+          }}
+          placeholder="Friend's Username"
+          className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-slate-100 text-xs"
+        />
+        {error && (
+          <div className="text-red-400 text-xs">{error}</div>
+        )}
+        {notification && (
+          <div className="text-yellow-400 text-xs mt-2">{notification}</div>
+        )}
+        <button
+          onClick={addFriend}
+          className="w-full bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded text-xs mt-2"
+        >
+          Add Friend
+        </button>
+        
+        <div className="flex gap-2 mt-2">
+          <button
+            onClick={() => {
+              setQrMode('generate');
+              setShowQRModal(true);
+            }}
+            className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 px-3 rounded text-xs"
+          >
+            📱 My QR Code
+          </button>
+          <button
+            onClick={() => {
+              setQrMode('scan');
+              setShowQRModal(true);
+            }}
+            className="flex-1 bg-purple-600 hover:bg-purple-500 text-white py-2 px-3 rounded text-xs"
+          >
+            📷 Scan QR Code
+          </button>
+        </div>
+      </div>
+
+      {/* Friends List */}
+      <div>
+        <h3 className="text-sm font-medium text-slate-300 mb-2">
+          Friends ({friends.length})
+        </h3>
+        {friends.length > 0 ? (
+          <div className="space-y-2">
+            {friends.map((friend) => (
+              <div key={friend.peerId} className="flex items-center gap-2 p-2 bg-slate-700 rounded">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                      friend.isOnline ? 'bg-green-500 animate-pulse' : 'bg-gray-500'
+                    }`}></div>
+                    <span className="text-slate-100 text-sm font-medium">
+                      {friend.username}
+                    </span>
+                  </div>
+                  <div className="text-slate-400 text-xs">
+                    {formatLastSeen(friend.lastSeen)}
+                  </div>
+                </div>
+                <button
+                  onClick={async () => {
+                    console.log(`🔄 Manually checking status for: ${friend.username}`);
+                    // 先更新lastSeen为当前时间，然后检查状态
+                    const updatedFriend = { ...friend, lastSeen: Date.now() };
+                    await checkFriendStatus(updatedFriend);
+                  }}
+                  className="bg-yellow-600 hover:bg-yellow-500 text-white px-2 py-1 rounded text-xs"
+                  title="Refresh status"
+                >
+                  🔄
+                </button>
+                <button
+                  onClick={() => onStartChat && onStartChat(friend.peerId, friend.username)}
+                  className="bg-sky-600 hover:bg-sky-500 text-white px-2 py-1 rounded text-xs"
+                  title="Send message"
+                >
+                  💬
+                </button>
+                <button
+                  onClick={() => onStartAudioCall(friend.peerId)}
+                  disabled={!peerInstance || !peerInstance.open}
+                  className={`px-2 py-1 rounded text-xs ${
+                    peerInstance && peerInstance.open
+                      ? 'bg-green-600 hover:bg-green-500 text-white'
+                      : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                  }`}
+                  title={peerInstance && peerInstance.open ? "Audio call" : "Connection not ready"}
+                >
+                  🎤
+                </button>
+                <button
+                  onClick={() => onStartVideoCall(friend.peerId)}
+                  disabled={!peerInstance || !peerInstance.open}
+                  className={`px-2 py-1 rounded text-xs ${
+                    peerInstance && peerInstance.open
+                      ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                      : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                  }`}
+                  title={peerInstance && peerInstance.open ? "Video call" : "Connection not ready"}
+                >
+                  📹
+                </button>
+                <button
+                  onClick={() => removeFriend(friend.peerId)}
+                  className="bg-red-600 hover:bg-red-500 text-white px-2 py-1 rounded text-xs"
+                >
+                  ❌
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-slate-400 text-center py-4 text-sm">
+            No friends added yet
+          </div>
+        )}
+      </div>
+      
+      <QRCodeModal
+        isVisible={showQRModal}
+        mode={qrMode}
+        identity={currentIdentity}
+        onClose={() => setShowQRModal(false)}
+        onFriendScanned={handleQRScanned}
+      />
+    </div>
+  );
+};

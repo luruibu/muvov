@@ -1,0 +1,48 @@
+{
+  "name": "p2p-webrtc-secure-chat",
+  "version": "1.0.0",
+  "description": "A peer-to-peer encrypted chat application with WebRTC support for secure messaging and audio/video calls",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "webrtc",
+    "p2p",
+    "chat",
+    "secure",
+    "encryption",
+    "video-call",
+    "audio-call",
+    "react",
+    "typescript"
+  ],
+  "author": "P2P WebRTC Secure Chat Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/p2p-webrtc-secure-chat.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/p2p-webrtc-secure-chat/issues"
+  },
+  "homepage": "https://github.com/yourusername/p2p-webrtc-secure-chat#readme",
+  "dependencies": {
+    "@types/peerjs": "^0.0.30",
+    "peerjs": "^1.5.5",
+    "qr-scanner": "^1.4.2",
+    "qrcode": "^1.5.4",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@types/react": "^19.1.12",
+    "@types/react-dom": "^19.1.9",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
+  }
+}
