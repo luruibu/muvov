@@ -109,9 +109,33 @@ The app includes configurable network optimization presets:
 - **Call records**: 100 most recent calls
 - **File references**: Filename only (actual files not stored)
 
+## 💝 Support This Project
+
+If you find this project helpful, consider supporting its development:
+
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+  <input type="hidden" name="cmd" value="_s-xclick" />
+  <input type="hidden" name="hosted_button_id" value="66X23LVXDKZAN" />
+  <table>
+    <tr>
+      <td>
+        <input type="hidden" name="on0" value="Voluntary Sponsorship.Thanks"/>
+        Voluntary Sponsorship.Thanks
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <input type="text" name="os0" maxLength="200" />
+      </td>
+    </tr>
+  </table>
+  <input type="hidden" name="currency_code" value="USD" />
+  <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_paynowCC_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
+</form>
+
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
+We welcome contributions! 
 
 ### Development Setup
 1. Fork the repository

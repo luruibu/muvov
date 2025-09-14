@@ -18,6 +18,7 @@ import { FileTransferModal } from './FileTransferModal';
 import { FileSendButton } from './FileSendButton';
 import { FileMessage } from './FileMessage';
 import { CallHistoryModal } from './CallHistoryModal';
+import { DonationModal } from './DonationModal';
 
 import { Identity, Message, RoomMessage } from '../types';
 
@@ -33,6 +34,7 @@ export const MeshChat: React.FC<MeshChatProps> = ({ identity, onLogout }) => {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [showCallHistory, setShowCallHistory] = useState(false);
+  const [showDonationModal, setShowDonationModal] = useState(false);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
 
   const [chatInputValue, setChatInputValue] = useState('');
@@ -311,6 +313,13 @@ export const MeshChat: React.FC<MeshChatProps> = ({ identity, onLogout }) => {
                 💾
               </button>
               <button
+                onClick={() => setShowDonationModal(true)}
+                className="text-slate-400 hover:text-slate-300 text-sm"
+                title="Support Project"
+              >
+                💝
+              </button>
+              <button
                 onClick={onLogout}
                 className="text-slate-400 hover:text-slate-300 text-sm"
               >
@@ -562,6 +571,12 @@ export const MeshChat: React.FC<MeshChatProps> = ({ identity, onLogout }) => {
       <CallHistoryModal
         isVisible={showCallHistory}
         onClose={() => setShowCallHistory(false)}
+      />
+      
+      {/* Donation Modal */}
+      <DonationModal
+        isOpen={showDonationModal}
+        onClose={() => setShowDonationModal(false)}
       />
     </div>
   );
