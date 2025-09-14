@@ -50,10 +50,7 @@ A peer-to-peer encrypted chat application built with WebRTC, supporting message 
    npm install
    ```
 
-3. (Optional) Set up Gemini API for enhanced features:
-   ```bash
-   echo "GEMINI_API_KEY=your_api_key_here" > .env.local
-   ```
+3. (Optional) 
 
 4. Start the development server:
    ```bash
