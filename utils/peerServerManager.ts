@@ -101,25 +101,7 @@ export class PeerServerManager {
     try {
       console.log(`🏥 Checking health of ${server.name} (${server.host})`);
       
-      // 1. HTTP连通性测试
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8秒超时
-      
-      // 构建健康检查URL
-      const protocol = server.secure ? 'https' : 'http';
-      const healthUrl = `${protocol}://${server.host}:${server.port}${server.path || '/'}`;
-      
-      console.log(`  检查 HTTP 连通性: ${healthUrl}`);
-      
-      const response = await fetch(healthUrl, {
-        method: 'HEAD',
-        signal: controller.signal,
-        mode: 'no-cors' // 避免CORS问题
-      });
-      
-      clearTimeout(timeoutId);
-      
-      // 2. WebSocket连通性测试
+      // 直接使用WebSocket连通性测试，这是PeerJS服务器的核心功能
       const wsHealthy = await this.testWebSocketConnection(server);
       
       const responseTime = Date.now() - startTime;
@@ -161,30 +143,49 @@ export class PeerServerManager {
   private static testWebSocketConnection(server: PeerServerConfig): Promise<boolean> {
     return new Promise((resolve) => {
       try {
+        // 构建PeerJS WebSocket URL
         const wsUrl = `${server.secure ? 'wss' : 'ws'}://${server.host}:${server.port}${server.path || '/'}peerjs`;
+        console.log(`  测试WebSocket连接: ${wsUrl}`);
+        
         const ws = new WebSocket(wsUrl);
+        let resolved = false;
         
         const timeout = setTimeout(() => {
-          ws.close();
-          resolve(false);
+          if (!resolved) {
+            resolved = true;
+            ws.close();
+            resolve(false);
+          }
         }, 5000);
         
         ws.onopen = () => {
-          clearTimeout(timeout);
-          ws.close();
-          resolve(true);
+          if (!resolved) {
+            resolved = true;
+            clearTimeout(timeout);
+            ws.close();
+            resolve(true);
+          }
         };
         
-        ws.onerror = () => {
-          clearTimeout(timeout);
-          resolve(false);
+        ws.onerror = (error) => {
+          if (!resolved) {
+            resolved = true;
+            clearTimeout(timeout);
+            console.log(`  WebSocket错误:`, error);
+            resolve(false);
+          }
         };
         
         ws.onclose = () => {
-          clearTimeout(timeout);
+          if (!resolved) {
+            resolved = true;
+            clearTimeout(timeout);
+            resolve(false);
+          }
         };
         
       } catch (error) {
+        console.log(`  WebSocket连接异常:`, error);
         resolve(false);
       }
     });
