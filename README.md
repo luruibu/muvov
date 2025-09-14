@@ -201,7 +201,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 ### Core Open Source Technologies
-- **[MUVOV](https://github.com/yourusername/muvov)** - Complete P2P communication framework
+- **[MUVOV](https://github.com/luruibu/muvov)** - Complete P2P communication framework
 - **[STUN Servers](https://webrtc.org/getting-started/turn-server)** - NAT traversal infrastructure
 - **[PeerJS](https://peerjs.com/)** - WebRTC abstraction layer
 
