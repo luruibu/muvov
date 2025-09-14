@@ -1,4 +1,4 @@
-// 系统设置管理
+// System settings management
 export interface ServerConfig {
   id: string;
   name: string;
@@ -6,7 +6,7 @@ export interface ServerConfig {
   port: number;
   path?: string;
   secure?: boolean;
-  key?: string;      // 添加 key 字段（用户配置）
+  key?: string;      // Add key field (user configuration)
   enabled: boolean;
 }
 
@@ -26,7 +26,7 @@ export interface SystemSettings {
 export class SettingsManager {
   private static readonly SETTINGS_KEY = 'meshchat_system_settings';
   
-  // 默认配置
+  // Default configuration
   static getDefaultSettings(): SystemSettings {
     return {
       peerServers: [
@@ -64,13 +64,13 @@ export class SettingsManager {
     };
   }
 
-  // 加载设置
+  // Load settings
   static loadSettings(): SystemSettings {
     try {
       const stored = localStorage.getItem(this.SETTINGS_KEY);
       if (stored) {
         const settings = JSON.parse(stored);
-        // 验证设置格式
+        // Validate settings format
         if (settings.version && settings.peerServers && settings.stunServers) {
           return settings;
         }
@@ -79,13 +79,13 @@ export class SettingsManager {
       console.warn('Failed to load settings:', error);
     }
     
-    // 返回默认设置
+    // Return default settings
     const defaultSettings = this.getDefaultSettings();
     this.saveSettings(defaultSettings);
     return defaultSettings;
   }
 
-  // 保存设置
+  // Save settings
   static saveSettings(settings: SystemSettings): void {
     try {
       localStorage.setItem(this.SETTINGS_KEY, JSON.stringify(settings));
@@ -94,54 +94,54 @@ export class SettingsManager {
     }
   }
 
-  // 获取启用的PeerJS服务器
+  // Get enabled PeerJS server
   static getEnabledPeerServer(): ServerConfig | null {
     const settings = this.loadSettings();
     return settings.peerServers.find(server => server.enabled) || null;
   }
 
-  // 获取启用的STUN服务器列表
+  // Get enabled STUN servers list
   static getEnabledSTUNServers(): STUNConfig[] {
     const settings = this.loadSettings();
     return settings.stunServers.filter(server => server.enabled);
   }
 
-  // 生成PeerJS配置
+  // Generate PeerJS configuration
   static getPeerJSConfig(): any {
     const peerServer = this.getEnabledPeerServer();
     const stunServers = this.getEnabledSTUNServers();
     
-    console.log('🔧 生成PeerJS配置...');
-    console.log('📋 启用的PeerJS服务器:', peerServer);
-    console.log('📋 启用的STUN服务器:', stunServers);
+    console.log('🔧 Generating PeerJS configuration...');
+    console.log('📋 Enabled PeerJS server:', peerServer);
+    console.log('📋 Enabled STUN servers:', stunServers);
     
     const config: any = {
       config: {
         iceServers: stunServers.length > 0 
           ? stunServers.map(server => ({ urls: server.url }))
-          : [{ urls: 'stun:stun.cloudflare.com:3478' }] // 默认STUN
+          : [{ urls: 'stun:stun.cloudflare.com:3478' }] // Default STUN
       },
       debug: 2
     };
 
-    // 如果有自定义PeerJS服务器且已启用
+    // If there's a custom PeerJS server and it's enabled
     if (peerServer && peerServer.enabled) {
-      console.log(`✅ 使用自定义服务器: ${peerServer.name} (${peerServer.host})`);
+      console.log(`✅ Using custom server: ${peerServer.name} (${peerServer.host})`);
       
-      // 只有非默认服务器才添加服务器配置
+      // Only add server configuration for non-default servers
       if (peerServer.host !== '0.peerjs.com') {
         config.host = peerServer.host;
         config.port = peerServer.port;
         config.path = peerServer.path || '/';
         config.secure = peerServer.secure !== false;
         
-        // 添加 key 支持
+        // Add key support
         if (peerServer.key && peerServer.key.trim()) {
           config.key = peerServer.key.trim();
-          console.log(`🔑 使用服务器密钥: ${config.key}`);
+          console.log(`🔑 Using server key: ${config.key}`);
         }
         
-        console.log('⚙️ 自定义服务器配置:', {
+        console.log('⚙️ Custom server configuration:', {
           host: config.host,
           port: config.port,
           path: config.path,
@@ -149,17 +149,17 @@ export class SettingsManager {
           key: config.key
         });
       } else {
-        console.log('✅ 使用默认PeerJS官方服务器');
+        console.log('✅ Using default PeerJS official server');
       }
     } else {
-      console.log('⚠️ 没有启用的PeerJS服务器，使用默认配置');
+      console.log('⚠️ No enabled PeerJS server, using default configuration');
     }
 
-    console.log('🎯 最终PeerJS配置:', config);
+    console.log('🎯 Final PeerJS configuration:', config);
     return config;
   }
 
-  // 添加PeerJS服务器
+  // Add PeerJS server
   static addPeerServer(server: Omit<ServerConfig, 'id'>): void {
     const settings = this.loadSettings();
     const newServer: ServerConfig = {
@@ -171,7 +171,7 @@ export class SettingsManager {
     this.saveSettings(settings);
   }
 
-  // 添加STUN服务器
+  // Add STUN server
   static addSTUNServer(server: Omit<STUNConfig, 'id'>): void {
     const settings = this.loadSettings();
     const newServer: STUNConfig = {
@@ -183,7 +183,7 @@ export class SettingsManager {
     this.saveSettings(settings);
   }
 
-  // 删除服务器
+  // Delete server
   static removePeerServer(id: string): void {
     const settings = this.loadSettings();
     settings.peerServers = settings.peerServers.filter(server => server.id !== id);
@@ -196,7 +196,7 @@ export class SettingsManager {
     this.saveSettings(settings);
   }
 
-  // 更新服务器
+  // Update server
   static updatePeerServer(id: string, updates: Partial<ServerConfig>): void {
     const settings = this.loadSettings();
     const index = settings.peerServers.findIndex(server => server.id === id);

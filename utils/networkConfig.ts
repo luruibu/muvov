@@ -1,52 +1,52 @@
-// 网络通信配置
+// Network communication configuration
 export const NetworkConfig = {
-  // 状态检查配置
+  // Status check configuration
   STATUS_CHECK: {
-    // 在线好友心跳间隔（毫秒）
-    HEARTBEAT_INTERVAL: 60000, // 1分钟（原来是30秒创建新连接）
+    // Online friends heartbeat interval (milliseconds)
+    HEARTBEAT_INTERVAL: 60000, // 1 minute (was 30 seconds creating new connections)
     
-    // 离线好友检查间隔（毫秒）
-    OFFLINE_CHECK_INTERVAL: 120000, // 2分钟（原来是30秒）
+    // Offline friends check interval (milliseconds)
+    OFFLINE_CHECK_INTERVAL: 120000, // 2 minutes (was 30 seconds)
     
-    // 连接超时时间（毫秒）
-    CONNECTION_TIMEOUT: 10000, // 10秒
+    // Connection timeout (milliseconds)
+    CONNECTION_TIMEOUT: 10000, // 10 seconds
     
-    // 错开连接的延迟（毫秒）
-    STAGGER_DELAY: 2000, // 2秒
+    // Stagger delay for connections (milliseconds)
+    STAGGER_DELAY: 2000, // 2 seconds
     
-    // 最大重试次数
+    // Maximum retry count
     MAX_RETRIES: 3
   },
 
-  // 消息配置
+  // Message configuration
   MESSAGING: {
-    // 消息去重时间窗口（毫秒）
-    DEDUP_WINDOW: 1000, // 1秒
+    // Message deduplication time window (milliseconds)
+    DEDUP_WINDOW: 1000, // 1 second
     
-    // 最大消息缓存数量
+    // Maximum cached message count
     MAX_CACHED_MESSAGES: 100,
     
-    // 消息重发间隔（毫秒）
-    RETRY_INTERVAL: 3000 // 3秒
+    // Message retry interval (milliseconds)
+    RETRY_INTERVAL: 3000 // 3 seconds
   },
 
-  // 连接配置
+  // Connection configuration
   CONNECTION: {
-    // 使用持久连接而不是频繁创建新连接
+    // Use persistent connections instead of frequently creating new ones
     USE_PERSISTENT_CONNECTIONS: true,
     
-    // 连接池大小
+    // Connection pool size
     MAX_CONNECTIONS: 10,
     
-    // 连接空闲超时（毫秒）
-    IDLE_TIMEOUT: 300000, // 5分钟
+    // Connection idle timeout (milliseconds)
+    IDLE_TIMEOUT: 300000, // 5 minutes
     
-    // 重连延迟（毫秒）
-    RECONNECT_DELAY: 5000 // 5秒
+    // Reconnection delay (milliseconds)
+    RECONNECT_DELAY: 5000 // 5 seconds
   }
 };
 
-// 根据网络条件动态调整配置
+// Dynamically adjust configuration based on network conditions
 export class AdaptiveNetworkConfig {
   private static connectionQuality: 'good' | 'poor' | 'offline' = 'good';
   
@@ -59,9 +59,9 @@ export class AdaptiveNetworkConfig {
       case 'good':
         return NetworkConfig.STATUS_CHECK.HEARTBEAT_INTERVAL;
       case 'poor':
-        return NetworkConfig.STATUS_CHECK.HEARTBEAT_INTERVAL * 2; // 2分钟
+        return NetworkConfig.STATUS_CHECK.HEARTBEAT_INTERVAL * 2; // 2 minutes
       case 'offline':
-        return NetworkConfig.STATUS_CHECK.HEARTBEAT_INTERVAL * 4; // 4分钟
+        return NetworkConfig.STATUS_CHECK.HEARTBEAT_INTERVAL * 4; // 4 minutes
       default:
         return NetworkConfig.STATUS_CHECK.HEARTBEAT_INTERVAL;
     }
@@ -72,16 +72,16 @@ export class AdaptiveNetworkConfig {
       case 'good':
         return NetworkConfig.STATUS_CHECK.OFFLINE_CHECK_INTERVAL;
       case 'poor':
-        return NetworkConfig.STATUS_CHECK.OFFLINE_CHECK_INTERVAL * 2; // 4分钟
+        return NetworkConfig.STATUS_CHECK.OFFLINE_CHECK_INTERVAL * 2; // 4 minutes
       case 'offline':
-        return NetworkConfig.STATUS_CHECK.OFFLINE_CHECK_INTERVAL * 4; // 8分钟
+        return NetworkConfig.STATUS_CHECK.OFFLINE_CHECK_INTERVAL * 4; // 8 minutes
       default:
         return NetworkConfig.STATUS_CHECK.OFFLINE_CHECK_INTERVAL;
     }
   }
 }
 
-// 网络质量监测
+// Network quality monitoring
 export class NetworkQualityMonitor {
   private static failedConnections = 0;
   private static totalConnections = 0;
@@ -92,7 +92,7 @@ export class NetworkQualityMonitor {
       this.failedConnections++;
     }
     
-    // 每10次连接评估一次网络质量
+    // Evaluate network quality every 10 connections
     if (this.totalConnections % 10 === 0) {
       const failureRate = this.failedConnections / this.totalConnections;
       
@@ -107,7 +107,7 @@ export class NetworkQualityMonitor {
         console.log('📶 Network quality: GOOD (failure rate:', failureRate.toFixed(2), ')');
       }
       
-      // 重置计数器
+      // Reset counters
       this.failedConnections = 0;
       this.totalConnections = 0;
     }

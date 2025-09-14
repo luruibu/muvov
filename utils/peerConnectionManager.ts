@@ -1,4 +1,4 @@
-// PeerJS连接管理器 - 防止重复连接
+// PeerJS connection manager - prevent duplicate connections
 import Peer from 'peerjs';
 
 export class PeerConnectionManager {
@@ -8,11 +8,11 @@ export class PeerConnectionManager {
   private static connectionCount = 0;
   private static lastPeerId: string | null = null;
 
-  // 获取或创建Peer连接（单例模式）
+  // Get or create Peer connection (singleton pattern)
   static async getOrCreatePeer(peerId: string, config: any): Promise<Peer> {
     console.log(`🔍 Requesting peer connection for ID: ${peerId}`);
     
-    // 检查是否已有相同ID的健康连接
+    // Check if there's already a healthy connection with the same ID
     if (this.currentPeer && 
         !this.currentPeer.destroyed && 
         this.currentPeer.id === peerId &&
@@ -21,19 +21,19 @@ export class PeerConnectionManager {
       return this.currentPeer;
     }
     
-    // 如果正在初始化相同ID的连接，等待完成
+    // If initializing connection with same ID, wait for completion
     if (this.isInitializing && this.initPromise && this.lastPeerId === peerId) {
       console.log('⏳ Waiting for existing initialization to complete');
       return this.initPromise;
     }
     
-    // 只有在ID不同或连接真的有问题时才清理
+    // Only cleanup when ID is different or connection has real issues
     if (this.currentPeer && (this.currentPeer.destroyed || this.lastPeerId !== peerId)) {
       console.log('🧹 Cleaning up incompatible connection');
       await this.forceCleanup();
     }
     
-    // 创建新连接
+    // Create new connection
     this.isInitializing = true;
     this.lastPeerId = peerId;
     this.connectionCount++;
@@ -55,7 +55,7 @@ export class PeerConnectionManager {
     }
   }
 
-  // 创建Peer连接
+  // Create Peer connection
   private static createPeerConnection(peerId: string, config: any): Promise<Peer> {
     return new Promise((resolve, reject) => {
       console.log(`🚀 Starting peer creation with config:`, config);
@@ -63,7 +63,7 @@ export class PeerConnectionManager {
       const peer = new Peer(peerId, config);
       let resolved = false;
       
-      // 设置超时
+      // Set timeout
       const timeout = setTimeout(() => {
         if (!resolved) {
           console.log('⏰ Peer connection timeout, destroying...');
@@ -72,7 +72,7 @@ export class PeerConnectionManager {
         }
       }, 30000);
       
-      // 监听连接成功
+      // Listen for connection success
       peer.on('open', (id) => {
         if (!resolved) {
           resolved = true;
@@ -82,14 +82,14 @@ export class PeerConnectionManager {
         }
       });
       
-      // 监听连接错误
+      // Listen for connection errors
       peer.on('error', (error) => {
         if (!resolved) {
           resolved = true;
           clearTimeout(timeout);
           console.error('💥 Peer error:', error.type, error.message);
           
-          // 特殊处理ID占用错误
+          // Special handling for ID occupation errors
           if (error.type === 'unavailable-id') {
             console.log('🔄 ID unavailable, will retry with cleanup');
           }
@@ -98,30 +98,30 @@ export class PeerConnectionManager {
         }
       });
       
-      // 监听连接断开
+      // Listen for disconnection
       peer.on('disconnected', () => {
         console.log('🔌 Peer disconnected');
       });
       
-      // 监听连接关闭
+      // Listen for connection close
       peer.on('close', () => {
         console.log('🚪 Peer connection closed');
       });
     });
   }
 
-  // 强制清理所有连接
+  // Force cleanup all connections
   static async forceCleanup(): Promise<void> {
     console.log('🧹 Starting force cleanup...');
     
-    // 取消正在进行的初始化
+    // Cancel ongoing initialization
     if (this.isInitializing && this.initPromise) {
       console.log('⏹️ Cancelling ongoing initialization');
       this.isInitializing = false;
       this.initPromise = null;
     }
     
-    // 销毁当前连接
+    // Destroy current connection
     if (this.currentPeer) {
       console.log('💀 Destroying current peer connection');
       
@@ -136,14 +136,14 @@ export class PeerConnectionManager {
       this.currentPeer = null;
     }
     
-    // 等待清理完成（减少等待时间）
+    // Wait for cleanup to complete (reduced wait time)
     console.log('⏳ Waiting for cleanup to complete...');
     await new Promise(resolve => setTimeout(resolve, 500));
     
     console.log('✅ Force cleanup completed');
   }
 
-  // 获取当前连接状态
+  // Get current connection status
   static getConnectionStatus(): {
     hasPeer: boolean;
     isOpen: boolean;
@@ -166,7 +166,7 @@ export class PeerConnectionManager {
     };
   }
 
-  // 获取WebSocket状态字符串
+  // Get WebSocket status string
   private static getSocketStateString(readyState: number): string {
     switch (readyState) {
       case WebSocket.CONNECTING: return 'CONNECTING';
@@ -177,13 +177,13 @@ export class PeerConnectionManager {
     }
   }
 
-  // 检查是否有重复连接
+  // Check for duplicate connections
   static checkForDuplicateConnections(): {
     duplicateCount: number;
     connections: string[];
     recommendation: string;
   } {
-    // 检查性能条目中的WebSocket连接
+    // Check WebSocket connections in performance entries
     const wsConnections = performance.getEntriesByType('resource')
       .filter((entry: any) => entry.name.includes('peerjs'))
       .map((entry: any) => entry.name);
@@ -192,11 +192,11 @@ export class PeerConnectionManager {
     
     let recommendation = '';
     if (duplicateCount > 1) {
-      recommendation = `⚠️ 检测到 ${duplicateCount} 个PeerJS连接，建议刷新页面清理重复连接`;
+      recommendation = `⚠️ Detected ${duplicateCount} PeerJS connections, recommend refreshing page to clean duplicate connections`;
     } else if (duplicateCount === 1) {
-      recommendation = '✅ 连接数量正常';
+      recommendation = '✅ Connection count is normal';
     } else {
-      recommendation = '❓ 未检测到PeerJS连接';
+      recommendation = '❓ No PeerJS connections detected';
     }
     
     return {
@@ -206,7 +206,7 @@ export class PeerConnectionManager {
     };
   }
 
-  // 重置管理器状态
+  // Reset manager state
   static reset(): void {
     console.log('🔄 Resetting PeerConnectionManager');
     
@@ -215,7 +215,7 @@ export class PeerConnectionManager {
     this.lastPeerId = null;
   }
 
-  // 获取详细诊断信息
+  // Get detailed diagnostic information
   static getDiagnosticInfo(): any {
     const status = this.getConnectionStatus();
     const duplicateCheck = this.checkForDuplicateConnections();
@@ -229,7 +229,7 @@ export class PeerConnectionManager {
   }
 }
 
-// 在控制台中可用的调试函数
+// Debug functions available in console
 (window as any).peerConnectionStatus = () => {
   const status = PeerConnectionManager.getConnectionStatus();
   console.log('🔍 Peer Connection Status:', status);

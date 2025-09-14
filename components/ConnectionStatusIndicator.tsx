@@ -4,7 +4,6 @@ interface ConnectionStatusIndicatorProps {
   isReady: boolean;
   connectionStatus: string;
   isOnline: boolean;
-  isVisible: boolean;
   onReconnect: () => void;
 }
 
@@ -12,7 +11,6 @@ export const ConnectionStatusIndicator: React.FC<ConnectionStatusIndicatorProps>
   isReady,
   connectionStatus,
   isOnline,
-  isVisible,
   onReconnect
 }) => {
   const [showDetails, setShowDetails] = useState(false);
@@ -64,12 +62,6 @@ export const ConnectionStatusIndicator: React.FC<ConnectionStatusIndicatorProps>
       <div className="flex items-center gap-2">
         <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`}></div>
         <span className="text-slate-400 text-xs">Network: {isOnline ? 'Online' : 'Offline'}</span>
-      </div>
-
-      {/* Page Visibility */}
-      <div className="flex items-center gap-2">
-        <div className={`w-2 h-2 rounded-full ${isVisible ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-        <span className="text-slate-400 text-xs">Page: {isVisible ? 'Active' : 'Background'}</span>
       </div>
 
       {/* Action Buttons */}

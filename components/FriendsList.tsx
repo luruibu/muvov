@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useFriendsStatus } from '../hooks/useFriendsStatus';
+import { useIndependentFriendsStatus } from '../hooks/useIndependentFriendsStatus';
 import { QRCodeModal } from './QRCodeModal';
 import { Friend, Identity } from '../types';
 import { InputSanitizer } from '../utils/sanitizer';
@@ -27,10 +27,15 @@ export const FriendsList: React.FC<FriendsListProps> = ({
   const [qrMode, setQrMode] = useState<'generate' | 'scan'>('generate');
   const [currentTime, setCurrentTime] = useState(Date.now());
 
-  const { friends, setFriends, checkFriendStatus } = useFriendsStatus(
-    currentIdentity.peerId,
-    peerInstance
+  const { friends, setFriends } = useIndependentFriendsStatus(
+    currentIdentity.peerId
   );
+
+  // 简化的状态检查函数
+  const checkFriendStatus = async (friend: Friend) => {
+    console.log(`Checking status for ${friend.username} (simplified)`);
+    // 实际检测由独立的hook处理
+  };
 
   // Update current time every minute for relative time display
   useEffect(() => {
@@ -42,26 +47,52 @@ export const FriendsList: React.FC<FriendsListProps> = ({
   }, []);
 
   useEffect(() => {
-    const handleFriendAdded = (event: any) => {
-      const { fromPeerId, fromUsername } = event.detail;
-      const exists = friends.some(f => f.peerId === fromPeerId);
-      if (!exists) {
+    const handleAutoAddFriend = (event: any) => {
+      const { peerId, username } = event.detail;
+      
+      setFriends(prevFriends => {
+        // 检查是否已存在
+        const exists = prevFriends.some(f => f.peerId === peerId);
+        if (exists) {
+          return prevFriends; // 不更新
+        }
+        
+        console.log('🤝 Auto-adding friend:', username);
         const newFriend: Friend = {
-          peerId: fromPeerId,
-          username: fromUsername,
+          peerId,
+          username,
           addedTime: Date.now(),
           lastSeen: Date.now(),
           isOnline: true,
         };
-        setFriends(prevFriends => [...prevFriends, newFriend]);
-      }
+        
+        // 反向通知对方已成功添加
+        if (peerInstance && peerInstance.open) {
+          try {
+            const conn = peerInstance.connect(peerId);
+            conn.on('open', () => {
+              conn.send({
+                type: 'friend_added_back',
+                fromPeerId: currentIdentity.peerId,
+                fromUsername: currentIdentity.username,
+                timestamp: Date.now()
+              });
+              setTimeout(() => conn.close(), 1000);
+            });
+          } catch (error) {
+            console.warn('Failed to send add-back notification:', error);
+          }
+        }
+        
+        return [...prevFriends, newFriend];
+      });
     };
 
-    window.addEventListener('friendAdded', handleFriendAdded);
+    window.addEventListener('autoAddFriend', handleAutoAddFriend);
     return () => {
-      window.removeEventListener('friendAdded', handleFriendAdded);
+      window.removeEventListener('autoAddFriend', handleAutoAddFriend);
     };
-  }, [friends, setFriends]);
+  }, [peerInstance, currentIdentity]); // 移除 friends 和 setFriends 依赖
 
   const addFriend = async () => {
     if (!newFriendId.trim() || !newFriendName.trim()) {

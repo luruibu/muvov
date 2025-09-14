@@ -1,57 +1,57 @@
-// 好友状态检查配置
+// Friends status check configuration
 export const FriendsConfig = {
-  // 状态检查间隔（毫秒）
-  STATUS_CHECK_INTERVAL: 120000, // 2分钟（原来是30秒）
+  // Status check interval (milliseconds)
+  STATUS_CHECK_INTERVAL: 120000, // 2 minutes (was 30 seconds)
   
-  // 初始检查延迟（毫秒）
-  INITIAL_CHECK_DELAY: 2000, // 2秒
+  // Initial check delay (milliseconds)
+  INITIAL_CHECK_DELAY: 2000, // 2 seconds
   
-  // 连接超时时间（毫秒）
-  CONNECTION_TIMEOUT: 5000, // 5秒
+  // Connection timeout (milliseconds)
+  CONNECTION_TIMEOUT: 5000, // 5 seconds
   
-  // 错开检查的延迟（毫秒）
-  STAGGER_DELAY: 1000, // 1秒
+  // Stagger delay for checks (milliseconds)
+  STAGGER_DELAY: 1000, // 1 second
   
-  // 可选的预设配置
+  // Optional preset configurations
   PRESETS: {
-    // 低频率 - 适合网络较差或想减少流量的情况
+    // Low frequency - suitable for poor network or to reduce traffic
     LOW_FREQUENCY: {
-      STATUS_CHECK_INTERVAL: 300000, // 5分钟
+      STATUS_CHECK_INTERVAL: 300000, // 5 minutes
       CONNECTION_TIMEOUT: 8000,
       STAGGER_DELAY: 2000
     },
     
-    // 中等频率 - 平衡性能和流量
+    // Medium frequency - balance performance and traffic
     MEDIUM_FREQUENCY: {
-      STATUS_CHECK_INTERVAL: 120000, // 2分钟
+      STATUS_CHECK_INTERVAL: 120000, // 2 minutes
       CONNECTION_TIMEOUT: 5000,
       STAGGER_DELAY: 1000
     },
     
-    // 高频率 - 快速响应但流量较大
+    // High frequency - fast response but more traffic
     HIGH_FREQUENCY: {
-      STATUS_CHECK_INTERVAL: 60000, // 1分钟
+      STATUS_CHECK_INTERVAL: 60000, // 1 minute
       CONNECTION_TIMEOUT: 3000,
       STAGGER_DELAY: 500
     },
     
-    // 原始设置 - 最快但流量最大
+    // Original settings - fastest but most traffic
     ORIGINAL: {
-      STATUS_CHECK_INTERVAL: 30000, // 30秒
+      STATUS_CHECK_INTERVAL: 30000, // 30 seconds
       CONNECTION_TIMEOUT: 5000,
       STAGGER_DELAY: 1000
     }
   }
 };
 
-// 应用预设配置
+// Apply preset configuration
 export const applyPreset = (preset: keyof typeof FriendsConfig.PRESETS) => {
   const config = FriendsConfig.PRESETS[preset];
   Object.assign(FriendsConfig, config);
   console.log(`✅ Applied ${preset} preset:`, config);
 };
 
-// 自定义配置
+// Custom configuration
 export const setCustomConfig = (config: Partial<typeof FriendsConfig>) => {
   Object.assign(FriendsConfig, config);
   console.log('✅ Applied custom config:', config);

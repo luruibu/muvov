@@ -132,6 +132,11 @@ export const useFriendChat = (localUsername: string, peer: any, onConnectionEsta
         });
         connectionsRef.current.set(peerId, conn);
         
+        // 更新好友在线状态
+        window.dispatchEvent(new CustomEvent('friendStatusUpdate', {
+          detail: { peerId, isOnline: true, lastSeen: Date.now() }
+        }));
+        
         // 通知文件传输管理器
         if (onConnectionEstablished) {
           onConnectionEstablished(peerId, conn);
@@ -163,6 +168,11 @@ export const useFriendChat = (localUsername: string, peer: any, onConnectionEsta
           return updated;
         });
         connectionsRef.current.delete(peerId);
+        
+        // 更新好友离线状态
+        window.dispatchEvent(new CustomEvent('friendStatusUpdate', {
+          detail: { peerId, isOnline: false, lastSeen: Date.now() }
+        }));
       });
       
       conn.on('error', (error) => {
@@ -269,6 +279,11 @@ export const useFriendChat = (localUsername: string, peer: any, onConnectionEsta
         
         connectionsRef.current.set(peerId, conn);
         
+        // 更新好友在线状态
+        window.dispatchEvent(new CustomEvent('friendStatusUpdate', {
+          detail: { peerId, isOnline: true, lastSeen: Date.now() }
+        }));
+        
         // 通知文件传输管理器
         if (onConnectionEstablished) {
           onConnectionEstablished(peerId, conn);
@@ -287,6 +302,11 @@ export const useFriendChat = (localUsername: string, peer: any, onConnectionEsta
           return updated;
         });
         connectionsRef.current.delete(peerId);
+        
+        // 更新好友离线状态
+        window.dispatchEvent(new CustomEvent('friendStatusUpdate', {
+          detail: { peerId, isOnline: false, lastSeen: Date.now() }
+        }));
       });
     }
   }, [activeChats, addMessage, addFileMessage, onConnectionEstablished]);

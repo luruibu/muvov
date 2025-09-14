@@ -1,4 +1,4 @@
-// 文件传输管理器
+// File transfer manager
 import type { DataConnection } from 'peerjs';
 
 export interface FileTransfer {
@@ -16,8 +16,8 @@ export interface FileTransfer {
   startTime?: number;
   endTime?: number;
   error?: string;
-  previewUrl?: string; // 媒体文件预览URL
-  thumbnailUrl?: string; // 缩略图URL
+  previewUrl?: string; // Media file preview URL
+  thumbnailUrl?: string; // Thumbnail URL
 }
 
 export interface FileTransferRequest {
@@ -35,7 +35,7 @@ export class FileTransferManager {
   private connections = new Map<string, DataConnection>();
   private chunkSize = 16384; // 16KB chunks
   private maxFileSize = 100 * 1024 * 1024; // 100MB limit
-  private completedFiles = new Map<string, Blob>(); // 存储已完成的文件Blob
+  private completedFiles = new Map<string, Blob>(); // Store completed file blobs
   
   private constructor() {}
   
@@ -46,9 +46,9 @@ export class FileTransferManager {
     return FileTransferManager.instance;
   }
   
-  // 注册连接
+  // Register connection
   registerConnection(peerId: string, connection: DataConnection) {
-    // 如果相同的 connection 已经注册过监听，避免重复注册（可能重复调用 registerConnection）
+    // If the same connection has already registered listeners, avoid duplicate registration
     const existing = this.connections.get(peerId);
     if (existing === connection && (connection as any).__ftm_registered) {
       return;
@@ -56,7 +56,7 @@ export class FileTransferManager {
 
     this.connections.set(peerId, connection);
 
-    // 标记为已注册，避免重复绑定同一 connection
+    // Mark as registered to avoid duplicate binding of the same connection
     (connection as any).__ftm_registered = true;
 
     connection.on('data', (data: any) => {
@@ -65,31 +65,31 @@ export class FileTransferManager {
 
     connection.on('close', () => {
       this.connections.delete(peerId);
-      // 取消所有与此连接相关的传输
+      // Cancel all transfers related to this connection
       this.cancelTransfersForPeer(peerId);
     });
   }
   
-  // 发送文件
+  // Send file
   async sendFile(file: File, receiverPeerId: string, senderName: string): Promise<string> {
     if (file.size > this.maxFileSize) {
-      throw new Error(`文件太大，最大支持 ${this.maxFileSize / 1024 / 1024}MB`);
+      throw new Error(`File too large, maximum supported ${this.maxFileSize / 1024 / 1024}MB`);
     }
     
     const connection = this.connections.get(receiverPeerId);
     if (!connection) {
-      throw new Error('没有找到与接收者的连接');
+      throw new Error('No connection found to receiver');
     }
     
     const transferId = `transfer_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     
-    // 为发送方创建本地预览URL
+    // Create local preview URL for sender
     let previewUrl: string | undefined;
     if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
       previewUrl = URL.createObjectURL(file);
     }
 
-    // 创建传输记录
+    // Create transfer record
     const transfer: FileTransfer = {
       id: transferId,
       fileName: file.name,
@@ -102,12 +102,12 @@ export class FileTransferManager {
       chunks: [],
       totalChunks: Math.ceil(file.size / this.chunkSize),
       receivedChunks: 0,
-      previewUrl: previewUrl, // 设置预览URL
+      previewUrl: previewUrl, // Set preview URL
     };
     
     this.transfers.set(transferId, transfer);
     
-    // 发送文件传输请求
+    // Send file transfer request
     const request: FileTransferRequest = {
       id: transferId,
       fileName: file.name,
@@ -128,7 +128,7 @@ export class FileTransferManager {
         // best-effort notify; ignore if send fails
       }
 
-      console.log(`📤 开始发送文件: ${file.name} (${this.formatFileSize(file.size)})`);
+      console.log(`📤 Starting to send file: ${file.name} (${this.formatFileSize(file.size)})`);
 
       // Start streaming file data immediately
       this.startFileTransfer(transferId, file).catch(err => {
@@ -148,7 +148,7 @@ export class FileTransferManager {
     }
   }
   
-  // 接受文件传输
+  // Accept file transfer
   acceptFileTransfer(transferId: string): boolean {
     const transfer = this.transfers.get(transferId);
     if (!transfer || transfer.status !== 'pending') {
@@ -172,16 +172,16 @@ export class FileTransferManager {
         }
       });
       
-      console.log(`✅ 接受文件传输: ${transfer.fileName}`);
+      console.log(`✅ Accept file transfer: ${transfer.fileName}`);
       return true;
       
     } catch (error) {
-      console.error('发送接受响应失败:', error);
+      console.error('Failed to send accept response:', error);
       return false;
     }
   }
   
-  // 拒绝文件传输
+  // Reject file transfer
   rejectFileTransfer(transferId: string): boolean {
     const transfer = this.transfers.get(transferId);
     if (!transfer || transfer.status !== 'pending') {
@@ -204,24 +204,24 @@ export class FileTransferManager {
         }
       });
       
-      console.log(`❌ 拒绝文件传输: ${transfer.fileName}`);
+      console.log(`❌ Reject file transfer: ${transfer.fileName}`);
       this.transfers.delete(transferId);
       return true;
       
     } catch (error) {
-      console.error('发送拒绝响应失败:', error);
+      console.error('Failed to send reject response:', error);
       return false;
     }
   }
   
-  // 取消文件传输
+  // Cancel file transfer
   cancelFileTransfer(transferId: string): boolean {
     const transfer = this.transfers.get(transferId);
     if (!transfer) {
       return false;
     }
     
-    // 确定要通知的peer ID
+    // Determine peer ID to notify
     const peerId = transfer.receiver || transfer.sender;
     
     const connection = this.connections.get(peerId);
@@ -232,14 +232,14 @@ export class FileTransferManager {
           data: { transferId }
         });
       } catch (error) {
-        console.error('发送取消消息失败:', error);
+        console.error('Failed to send cancel message:', error);
       }
     }
     
     transfer.status = 'cancelled';
-    console.log(`🚫 取消文件传输: ${transfer.fileName}`);
+    console.log(`🚫 Cancel file transfer: ${transfer.fileName}`);
     
-    // 延迟删除，给UI时间显示状态
+    // Delayed deletion to give UI time to show status
     setTimeout(() => {
       this.transfers.delete(transferId);
     }, 3000);
@@ -247,18 +247,18 @@ export class FileTransferManager {
     return true;
   }
   
-  // 开始传输文件数据
+  // Start transferring file data
   private async startFileTransfer(transferId: string, file: File) {
     const transfer = this.transfers.get(transferId);
     if (!transfer || (transfer.status === 'cancelled' || transfer.status === 'completed' || transfer.status === 'failed')) {
-      console.log(`[fileTransfer] 跳过传输 ${transferId}: 状态=${transfer?.status || 'not found'}`);
+      console.log(`[fileTransfer] Skip transfer ${transferId}: status=${transfer?.status || 'not found'}`);
       return;
     }
     
     const connection = this.connections.get(transfer.receiver || transfer.sender);
     if (!connection) {
       transfer.status = 'failed';
-      transfer.error = '连接丢失';
+      transfer.error = 'Connection lost';
       return;
     }
     
@@ -266,7 +266,7 @@ export class FileTransferManager {
     
     try {
       const arrayBuffer = await file.arrayBuffer();
-      // 如果在读取过程中传输被取消或删除，停止继续处理
+      // If transfer was cancelled or deleted during reading, stop processing
       const currentTransferAfterRead = this.transfers.get(transferId);
       if (!currentTransferAfterRead || currentTransferAfterRead.status === 'cancelled') {
         console.warn(`[fileTransfer] transfer ${transferId} cancelled during file read, aborting`);
@@ -274,7 +274,7 @@ export class FileTransferManager {
       }
       const uint8Array = new Uint8Array(arrayBuffer);
       
-      // 分块发送
+      // Send in chunks
       for (let i = 0; i < transfer.totalChunks; i++) {
         const start = i * this.chunkSize;
         const end = Math.min(start + this.chunkSize, uint8Array.length);
@@ -284,19 +284,19 @@ export class FileTransferManager {
         
         transfer.progress = Math.round(((i + 1) / transfer.totalChunks) * 100);
         
-        // 检查是否被取消
+        // Check if cancelled
         const currentTransfer = this.transfers.get(transferId);
         if (!currentTransfer || currentTransfer.status === 'cancelled') {
           return;
         }
         
-        // 小延迟避免阻塞UI
+        // Small delay to avoid blocking UI
         if (i % 10 === 0) {
           await new Promise(resolve => setTimeout(resolve, 1));
         }
       }
       
-      // 发送传输完成信号
+      // Send transfer complete signal
       connection.send({
         type: 'file_transfer_complete',
         data: { transferId }
@@ -306,23 +306,23 @@ export class FileTransferManager {
       transfer.endTime = Date.now();
       transfer.progress = 100;
       
-      console.log(`✅ 文件传输完成: ${transfer.fileName}`);
+      console.log(`✅ File transfer completed: ${transfer.fileName}`);
       
     } catch (error) {
       transfer.status = 'failed';
-      transfer.error = error instanceof Error ? error.message : '传输失败';
-      console.error('文件传输失败:', error);
+      transfer.error = error instanceof Error ? error.message : 'Transfer failed';
+      console.error('File transfer failed:', error);
     }
   }
   
-  // 发送文件块
+  // Send file chunk
   private async sendChunk(transferId: string, chunkIndex: number, chunk: Uint8Array): Promise<void> {
     const transfer = this.transfers.get(transferId);
     if (!transfer) return;
     
     const connection = this.connections.get(transfer.receiver || transfer.sender);
     if (!connection) {
-      throw new Error('连接丢失');
+      throw new Error('Connection lost');
     }
     // Try to use the underlying RTCDataChannel's bufferedAmount to apply backpressure
     const dc = (connection as any).dc || (connection as any)._dc || (connection as any).peerConnection;
@@ -377,7 +377,7 @@ export class FileTransferManager {
     });
   }
   
-  // 处理接收到的数据
+  // Handle received data
   private handleIncomingData(peerId: string, data: any) {
     switch (data.type) {
       case 'file_transfer_request':
@@ -402,7 +402,7 @@ export class FileTransferManager {
     }
   }
   
-  // 处理文件传输请求
+  // Handle file transfer request
   private handleFileTransferRequest(peerId: string, request: FileTransferRequest) {
     const transfer: FileTransfer = {
       id: request.id,
@@ -410,7 +410,7 @@ export class FileTransferManager {
       fileSize: request.fileSize,
       fileType: request.fileType,
       sender: peerId,
-      receiver: '', // 当前用户
+      receiver: '', // Current user
       status: 'transferring',
       progress: 0,
       chunks: new Array(Math.ceil(request.fileSize / this.chunkSize)),
@@ -420,23 +420,23 @@ export class FileTransferManager {
     
     this.transfers.set(request.id, transfer);
     
-    console.log(`📥 自动接收文件传输: ${request.fileName} 来自 ${request.sender}`);
+    console.log(`📥 Auto-accept file transfer: ${request.fileName} from ${request.sender}`);
     // Auto-accept: ready to receive chunks immediately
   }
   
-  // 处理文件传输响应
+  // Handle file transfer response
   private async handleFileTransferResponse(peerId: string, response: { transferId: string; accepted: boolean }) {
     const transfer = this.transfers.get(response.transferId);
     if (!transfer) return;
     
     if (response.accepted) {
-      console.log(`✅ 文件传输被接受: ${transfer.fileName}`);
+      console.log(`✅ File transfer accepted: ${transfer.fileName}`);
       
-      // 开始传输文件（需要原始文件对象）
-      // 这里需要从UI获取文件对象
+      // Start transferring file (needs original file object)
+      // Need to get file object from UI here
       // In simplified flow, sender already started streaming; nothing to do here.
     } else {
-      console.log(`❌ 文件传输被拒绝: ${transfer.fileName}`);
+      console.log(`❌ File transfer rejected: ${transfer.fileName}`);
       transfer.status = 'rejected';
       setTimeout(() => {
         this.transfers.delete(response.transferId);
@@ -444,33 +444,33 @@ export class FileTransferManager {
     }
   }
   
-  // 处理文件块
+  // Handle file chunk
   private handleFileChunk(peerId: string, chunkData: any) {
     const { transferId, chunkIndex, chunk } = chunkData;
     const transfer = this.transfers.get(transferId);
     
     if (!transfer) {
-      console.warn(`[fileTransfer] 收到未知传输的块: ${transferId}`);
+      console.warn(`[fileTransfer] Received chunk for unknown transfer: ${transferId}`);
       return;
     }
     if (transfer.status === 'cancelled' || transfer.status === 'completed' || transfer.status === 'failed') {
-      console.warn(`[fileTransfer] 忽略已结束传输的块: ${transferId} status=${transfer.status}`);
+      console.warn(`[fileTransfer] Ignoring chunk for ended transfer: ${transferId} status=${transfer.status}`);
       return;
     }
 
-    // 如果是第一个块，更新状态为传输中
+    // If first chunk, update status to transferring
     if (transfer.status !== 'transferring') {
       transfer.status = 'transferring';
       transfer.startTime = Date.now();
     }
 
-    // 防止重复计数：如果已存在该索引，则忽略（网络重传或重复消息）
+    // Prevent duplicate counting: ignore if index already exists (network retransmission or duplicate messages)
     if (transfer.chunks[chunkIndex]) {
       console.debug(`[fileTransfer] duplicate chunk ignored transfer=${transferId} idx=${chunkIndex}`);
       return;
     }
 
-    // 转换回Uint8Array（支持 Array, ArrayBuffer, Uint8Array）
+    // Convert back to Uint8Array (supports Array, ArrayBuffer, Uint8Array)
     let chunkUint8: Uint8Array;
     if (chunk instanceof Uint8Array) {
       chunkUint8 = chunk;
@@ -491,15 +491,15 @@ export class FileTransferManager {
     transfer.progress = Math.round((transfer.receivedChunks / transfer.totalChunks) * 100);
 
     if (transfer.receivedChunks === transfer.totalChunks) {
-      // 所有块都收到了，组装文件
+      // All chunks received, assemble file
       this.assembleFile(transfer);
     }
   }
   
-  // 组装文件
+  // Assemble file
   private assembleFile(transfer: FileTransfer) {
     try {
-      // 计算总大小
+      // Calculate total size
       const totalSize = transfer.chunks.reduce((sum, chunk) => sum + (chunk?.length || 0), 0);
       const assembledData = new Uint8Array(totalSize);
       
@@ -511,17 +511,17 @@ export class FileTransferManager {
         }
       }
       
-      // 创建Blob
+      // Create Blob
       const blob = new Blob([assembledData], { type: transfer.fileType });
       
-      // 存储文件Blob供预览使用
+      // Store file Blob for preview use
       this.completedFiles.set(transfer.id, blob);
       
-      // 为媒体文件创建预览URL
+      // Create preview URL for media files
       if (this.isMediaFile(transfer.fileType)) {
         transfer.previewUrl = URL.createObjectURL(blob);
         
-        // 为图片生成缩略图
+        // Generate thumbnail for images
         if (transfer.fileType.startsWith('image/')) {
           this.generateThumbnail(blob, transfer.fileType).then(thumbnailUrl => {
             if (thumbnailUrl) {
@@ -536,34 +536,34 @@ export class FileTransferManager {
       transfer.endTime = Date.now();
       transfer.progress = 100;
       
-      console.log(`✅ 文件接收完成: ${transfer.fileName}`);
+      console.log(`✅ File reception completed: ${transfer.fileName}`);
       
-      // 通知UI文件接收完成（UI 可以提供预览或保存）
+      // Notify UI that file reception is complete (UI can provide preview or save)
       this.notifyFileReceived(transfer);
       
     } catch (error) {
       transfer.status = 'failed';
-      transfer.error = error instanceof Error ? error.message : '文件组装失败';
-      console.error('文件组装失败:', error);
+      transfer.error = error instanceof Error ? error.message : 'File assembly failed';
+      console.error('File assembly failed:', error);
     }
   }
   
-  // 处理传输完成
+  // Handle transfer completion
   private handleFileTransferComplete(peerId: string, data: { transferId: string }) {
     const transfer = this.transfers.get(data.transferId);
     if (transfer) {
       transfer.status = 'completed';
       transfer.endTime = Date.now();
-      console.log(`✅ 文件传输完成确认: ${transfer.fileName}`);
+      console.log(`✅ File transfer completion confirmed: ${transfer.fileName}`);
     }
   }
   
-  // 处理传输取消
+  // Handle transfer cancellation
   private handleFileTransferCancel(peerId: string, data: { transferId: string }) {
     const transfer = this.transfers.get(data.transferId);
     if (transfer) {
       transfer.status = 'cancelled';
-      console.log(`🚫 文件传输被取消: ${transfer.fileName}`);
+      console.log(`🚫 File transfer cancelled: ${transfer.fileName}`);
       
       setTimeout(() => {
         this.transfers.delete(data.transferId);
@@ -571,29 +571,29 @@ export class FileTransferManager {
     }
   }
   
-  // 取消与特定peer相关的所有传输
+  // Cancel all transfers related to specific peer
   private cancelTransfersForPeer(peerId: string) {
     for (const [transferId, transfer] of this.transfers) {
       if (transfer.sender === peerId || transfer.receiver === peerId) {
         if (transfer.status === 'transferring' || transfer.status === 'accepted' || transfer.status === 'pending') {
           transfer.status = 'cancelled';
-          transfer.error = '连接断开';
+          transfer.error = 'Connection disconnected';
         }
       }
     }
   }
   
-  // 获取传输列表
+  // Get transfer list
   getTransfers(): FileTransfer[] {
     return Array.from(this.transfers.values());
   }
   
-  // 获取特定传输
+  // Get specific transfer
   getTransfer(transferId: string): FileTransfer | undefined {
     return this.transfers.get(transferId);
   }
   
-  // 格式化文件大小
+  // Format file size
   private formatFileSize(bytes: number): string {
     if (bytes === 0) return '0 B';
     const k = 1024;
@@ -604,19 +604,19 @@ export class FileTransferManager {
   
   // (old request/accept notification removed - transfers auto-start)
   
-  // 开始文件传输（从UI调用）
+  // Start file transfer (called from UI)
   async startTransferWithFile(transferId: string, file: File) {
     await this.startFileTransfer(transferId, file);
   }
   
-  // 判断是否为媒体文件
+  // Check if it's a media file
   private isMediaFile(fileType: string): boolean {
     return fileType.startsWith('image/') || 
            fileType.startsWith('video/') || 
            fileType.startsWith('audio/');
   }
   
-  // 生成图片缩略图
+  // Generate image thumbnail
   private async generateThumbnail(blob: Blob, fileType: string): Promise<string | null> {
     if (!fileType.startsWith('image/')) {
       return null;
@@ -633,7 +633,7 @@ export class FileTransferManager {
       }
       
       img.onload = () => {
-        // 设置缩略图尺寸
+        // Set thumbnail size
         const maxSize = 150;
         let { width, height } = img;
         
@@ -652,10 +652,10 @@ export class FileTransferManager {
         canvas.width = width;
         canvas.height = height;
         
-        // 绘制缩略图
+        // Draw thumbnail
         ctx.drawImage(img, 0, 0, width, height);
         
-        // 转换为Blob URL
+        // Convert to Blob URL
         canvas.toBlob((thumbnailBlob) => {
           if (thumbnailBlob) {
             const thumbnailUrl = URL.createObjectURL(thumbnailBlob);
@@ -665,7 +665,7 @@ export class FileTransferManager {
           }
         }, 'image/jpeg', 0.8);
         
-        // 清理
+        // Cleanup
         URL.revokeObjectURL(img.src);
       };
       
@@ -678,7 +678,7 @@ export class FileTransferManager {
     });
   }
   
-  // 获取文件预览URL
+  // Get file preview URL
   getFilePreviewUrl(transferId: string): string | null {
     const transfer = this.transfers.get(transferId);
     if (transfer && transfer.previewUrl) {
@@ -688,7 +688,7 @@ export class FileTransferManager {
     const blob = this.completedFiles.get(transferId);
     if (blob) {
       const url = URL.createObjectURL(blob);
-      // 更新传输记录
+      // Update transfer record
       if (transfer) {
         transfer.previewUrl = url;
       }
@@ -698,12 +698,12 @@ export class FileTransferManager {
     return null;
   }
   
-  // 获取文件Blob
+  // Get file Blob
   getFileBlob(transferId: string): Blob | null {
     return this.completedFiles.get(transferId) || null;
   }
   
-  // 清理文件资源
+  // Clean up file resources
   cleanupFileResources(transferId: string) {
     const transfer = this.transfers.get(transferId);
     if (transfer) {
@@ -720,7 +720,7 @@ export class FileTransferManager {
     this.completedFiles.delete(transferId);
   }
   
-  // 通知UI文件接收完成
+  // Notify UI that file reception is complete
   private notifyFileReceived(transfer: FileTransfer) {
     window.dispatchEvent(new CustomEvent('fileReceived', {
       detail: transfer

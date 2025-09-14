@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useMeshNetwork } from '../hooks/useMeshNetwork';
 import { useSimpleCall } from '../hooks/useSimpleCall';
-import { useFriendsStatus } from '../hooks/useFriendsStatus';
+import { useIndependentFriendsStatus } from '../hooks/useIndependentFriendsStatus';
 import { useRoomSystem } from '../hooks/useRoomSystem';
 import { useFriendChat } from '../hooks/useFriendChat';
 import { useFileTransfer } from '../hooks/useFileTransfer';
@@ -14,6 +14,7 @@ import { BackupModal } from './BackupModal';
 import { SettingsModal } from './SettingsModal';
 import { DebugPanel } from './DebugPanel';
 import { ConnectionStatusIndicator } from './ConnectionStatusIndicator';
+import { FriendsStatusIndicator } from './FriendsStatusIndicator';
 import { FileTransferModal } from './FileTransferModal';
 import { FileSendButton } from './FileSendButton';
 import { FileMessage } from './FileMessage';
@@ -68,7 +69,7 @@ export const MeshChat: React.FC<MeshChatProps> = ({ identity, onLogout }) => {
     leaveRoom
   } = useRoomSystem(identity.username, identity.peerId, peerInstance);
 
-  const { friends } = useFriendsStatus(identity.peerId, peerInstance);
+  const { friends, onlineFriendsCount, isCheckingFriends, refreshFriendsStatus } = useIndependentFriendsStatus(identity.peerId);
 
   // 文件传输功能
   const {
@@ -145,6 +146,9 @@ export const MeshChat: React.FC<MeshChatProps> = ({ identity, onLogout }) => {
                 }
               }));
             }
+          } else if (data.type === 'friend_added_back') {
+            console.log('✅ Friend confirmed mutual addition:', data.fromUsername);
+            // 可以在这里显示通知或更新状态
           }
         });
       };
@@ -330,13 +334,18 @@ export const MeshChat: React.FC<MeshChatProps> = ({ identity, onLogout }) => {
           <p className="text-sm text-slate-400">Welcome, <span className="font-semibold">{identity.username}</span></p>
           
           {/* Connection Status */}
-          <div className="mt-2">
+          <div className="mt-2 space-y-2">
             <ConnectionStatusIndicator
               isReady={isReady}
               connectionStatus={connectionStatus}
               isOnline={isOnline}
-              isVisible={isVisible}
               onReconnect={attemptReconnect}
+            />
+            <FriendsStatusIndicator
+              totalFriends={friends.length}
+              onlineFriends={onlineFriendsCount}
+              isChecking={isCheckingFriends}
+              onRefresh={refreshFriendsStatus}
             />
           </div>
         </div>

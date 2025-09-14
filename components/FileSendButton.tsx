@@ -94,15 +94,15 @@ export const FileSendButton: React.FC<FileSendButtonProps> = ({
           }
           ${className}
         `}
-        title={disabled ? '无法发送文件' : '点击选择文件或拖拽文件到此处'}
+        title={disabled ? 'Cannot send file' : 'Click to select file or drag file here'}
       >
         <span className="text-lg mr-1">📎</span>
-        {size !== 'sm' && <span>发送文件</span>}
+        {size !== 'sm' && <span>Send File</span>}
       </button>
       
       {isDragOver && (
         <div className="absolute inset-0 border-2 border-dashed border-sky-400 rounded-lg bg-sky-400 bg-opacity-10 flex items-center justify-center">
-          <span className="text-sky-400 font-medium">释放文件</span>
+          <span className="text-sky-400 font-medium">Drop file</span>
         </div>
       )}
     </div>

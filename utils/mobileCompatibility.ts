@@ -1,11 +1,11 @@
-// 手机浏览器兼容性工具
+// Mobile browser compatibility utility
 export class MobileCompatibility {
-  // 检测是否为移动设备
+  // Detect if mobile device
   static isMobile(): boolean {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   }
 
-  // 检测摄像头支持
+  // Check camera support
   static async checkCameraSupport(): Promise<boolean> {
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
@@ -15,11 +15,11 @@ export class MobileCompatibility {
     }
   }
 
-  // 请求摄像头权限
+  // Request camera permission
   static async requestCameraPermission(): Promise<boolean> {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } // 后置摄像头更适合扫码
+        video: { facingMode: 'environment' } // Rear camera is better for QR scanning
       });
       stream.getTracks().forEach(track => track.stop());
       return true;
@@ -28,7 +28,7 @@ export class MobileCompatibility {
     }
   }
 
-  // 获取移动端优化的 PeerJS 配置
+  // Get mobile-optimized PeerJS configuration
   static getMobilePeerConfig(): any {
     return {
       config: {
@@ -39,11 +39,11 @@ export class MobileCompatibility {
         iceTransportPolicy: 'all',
         iceCandidatePoolSize: 10
       },
-      debug: 1 // 减少日志输出
+      debug: 1 // Reduce log output
     };
   }
 
-  // 检测 WebRTC 支持
+  // Check WebRTC support
   static checkWebRTCSupport(): boolean {
     return !!(window.RTCPeerConnection || window.webkitRTCPeerConnection);
   }
