@@ -103,7 +103,7 @@ With these three components, you can quickly deploy a **fully autonomous, self-c
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/muvov.git
+   git clone https://github.com/luruibu/muvov.git
    cd muvov
    ```
 
@@ -213,7 +213,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 If you encounter any issues or have questions:
-1. Check the [Issues](https://github.com/yourusername/p2p-webrtc-secure-chat/issues) page
+1. Check the [Issues](https://github.com/luruibu/p2p-webrtc-secure-chat/issues) page
 2. Create a new issue with detailed information
 3. Join our community discussions
 
