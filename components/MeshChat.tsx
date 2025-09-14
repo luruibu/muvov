@@ -550,6 +550,16 @@ export const MeshChat: React.FC<MeshChatProps> = ({ identity, onLogout }) => {
         estimateRemainingTime={estimateRemainingTime}
       />
       
+      {/* Backup Modal */}
+      <BackupModal
+        isVisible={showBackupModal}
+        onClose={() => setShowBackupModal(false)}
+        onRestoreComplete={() => {
+          // Refresh the page after restore
+          window.location.reload();
+        }}
+      />
+      
       {/* Settings Modal */}
       <SettingsModal
         isVisible={showSettingsModal}
