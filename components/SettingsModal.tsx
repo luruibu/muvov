@@ -249,7 +249,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isVisible, onClose
                   />
                   <input
                     type="text"
-                    placeholder="Host (e.g., pjs.gotestsec.net)"
+                    placeholder="Host (e.g., peerjs.example.com)"
                     value={newPeerServer.host}
                     onChange={(e) => setNewPeerServer(prev => ({ ...prev, host: e.target.value }))}
                     className="px-3 py-2 bg-slate-600 border border-slate-500 rounded text-slate-100 text-sm"
@@ -318,7 +318,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isVisible, onClose
                         />
                         <input
                           type="text"
-                          placeholder="Host (e.g., pjs.gotestsec.net)"
+                          placeholder="Host (e.g., peerjs.example.com)"
                           value={editPeerServer.host}
                           onChange={(e) => setEditPeerServer(prev => ({ ...prev, host: e.target.value }))}
                           className="px-3 py-2 bg-slate-600 border border-slate-500 rounded text-slate-100 text-sm"

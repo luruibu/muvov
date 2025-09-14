@@ -41,6 +41,14 @@ With these three components, you can quickly deploy a **fully autonomous, self-c
 - **Network adaptation**: Adjusts to connection quality
 - **Real-time status**: Live online/offline friend status
 
+### 🌍 Universal Access
+- **Browser-Only**: No client installation required - runs entirely in web browsers
+- **Cross-Platform**: Works on Windows, Mac, Linux, iOS, Android, and any device with a modern browser
+- **Instant Access**: Open any browser, visit the URL, and start communicating immediately
+- **Zero Installation**: No app stores, no downloads, no system permissions required
+- **Always Available**: Access from any device, anywhere, anytime with just a web browser
+- **No Client Downloads**: Unlike traditional messaging apps that require installation, MUVOV works instantly in any modern browser
+
 ## 🔒 Security Architecture & Data Protection
 
 ### 🛡️ Zero-Server Data Storage
