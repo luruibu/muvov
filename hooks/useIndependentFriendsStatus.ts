@@ -66,8 +66,7 @@ export const useIndependentFriendsStatus = (currentPeerId: string) => {
       });
 
       statusPeer.on('error', (error) => {
-        console.log('⚠️ Status peer error (ignored):', error.type);
-        // Ignore errors from status peer to prevent interference
+        console.log('⚠️ Status peer error (isolated):', error.type);
       });
 
       statusPeer.on('disconnected', () => {
@@ -77,7 +76,7 @@ export const useIndependentFriendsStatus = (currentPeerId: string) => {
             statusPeerRef.current = null;
             initializeStatusPeer();
           }
-        }, 5000);
+        }, 10000);
       });
 
     } catch (error) {
@@ -155,7 +154,7 @@ export const useIndependentFriendsStatus = (currentPeerId: string) => {
             setIsCheckingFriends(false);
           }
         });
-      }, index * 500); // Stagger checks
+      }, index * 2000); // Stagger checks every 2 seconds
     });
   }, [friends, checkFriendStatus]);
 
@@ -176,22 +175,23 @@ export const useIndependentFriendsStatus = (currentPeerId: string) => {
 
   // Start periodic checking when status peer is ready
   useEffect(() => {
-    if (statusPeerRef.current && friends.length > 0) {
-      // Initial check
-      setTimeout(() => checkAllFriendsStatus(), 2000);
+    if (statusPeerRef.current && statusPeerRef.current.open && friends.length > 0) {
+      const initialTimeout = setTimeout(() => {
+        checkAllFriendsStatus();
+      }, 15000);
       
-      // Periodic checks
       statusCheckInterval.current = setInterval(() => {
         checkAllFriendsStatus();
-      }, 30000); // Check every 30 seconds
+      }, 300000); // 5 minutes
 
       return () => {
+        clearTimeout(initialTimeout);
         if (statusCheckInterval.current) {
           clearInterval(statusCheckInterval.current);
         }
       };
     }
-  }, [statusPeerRef.current, friends.length, checkAllFriendsStatus]);
+  }, [statusPeerRef.current?.open, friends.length, checkAllFriendsStatus]);
 
   // Handle auto-add friend events
   useEffect(() => {

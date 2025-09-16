@@ -31,11 +31,7 @@ export const FriendsList: React.FC<FriendsListProps> = ({
     currentIdentity.peerId
   );
 
-  // 简化的状态检查函数
-  const checkFriendStatus = async (friend: Friend) => {
-    console.log(`Checking status for ${friend.username} (simplified)`);
-    // 实际检测由独立的hook处理
-  };
+
 
   // Update current time every minute for relative time display
   useEffect(() => {
@@ -138,11 +134,8 @@ export const FriendsList: React.FC<FriendsListProps> = ({
     
     // 立即检查好友状态
     try {
-      // 等待一下让状态更新生效
-      setTimeout(async () => {
-        await checkFriendStatus(newFriend);
-        console.log(`🔄 Checking status for newly added friend: ${newFriend.username}`);
-      }, 500);
+      // 状态检测由独立的hook自动处理
+      console.log(`✅ Added friend: ${newFriend.username}, status will be checked automatically`);
       
       setNotification('Friend added successfully!');
       
@@ -225,7 +218,6 @@ export const FriendsList: React.FC<FriendsListProps> = ({
     setFriends([...friends, newFriend]);
     
     try {
-      await checkFriendStatus(newFriend);
       setNotification('Friend added successfully via QR code!');
       
       // 通知对方
@@ -367,18 +359,7 @@ export const FriendsList: React.FC<FriendsListProps> = ({
                     {formatLastSeen(friend.lastSeen)}
                   </div>
                 </div>
-                <button
-                  onClick={async () => {
-                    console.log(`🔄 Manually checking status for: ${friend.username}`);
-                    // 先更新lastSeen为当前时间，然后检查状态
-                    const updatedFriend = { ...friend, lastSeen: Date.now() };
-                    await checkFriendStatus(updatedFriend);
-                  }}
-                  className="bg-yellow-600 hover:bg-yellow-500 text-white px-2 py-1 rounded text-xs"
-                  title="Refresh status"
-                >
-                  🔄
-                </button>
+
                 <button
                   onClick={() => onStartChat && onStartChat(friend.peerId, friend.username)}
                   className="bg-sky-600 hover:bg-sky-500 text-white px-2 py-1 rounded text-xs"
