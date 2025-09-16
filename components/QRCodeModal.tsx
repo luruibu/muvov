@@ -5,13 +5,7 @@ import { Identity } from '../types';
 import { InputSanitizer } from '../utils/sanitizer';
 import { MobileCompatibility } from '../utils/mobileCompatibility';
 
-// Set QR Scanner worker path with fallback
-try {
-  QrScanner.WORKER_PATH = new URL('/qr-scanner-worker.min.js', window.location.origin).href;
-} catch {
-  // Fallback for environments where URL constructor fails
-  QrScanner.WORKER_PATH = '/qr-scanner-worker.min.js';
-}
+
 
 interface QRCodeModalProps {
   isVisible: boolean;
