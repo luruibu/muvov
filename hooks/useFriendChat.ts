@@ -14,6 +14,7 @@ export const useFriendChat = (localUsername: string, peer: any, onConnectionEsta
   const [activeChats, setActiveChats] = useState<Map<string, FriendChat>>(new Map());
   const [currentChatPeerId, setCurrentChatPeerId] = useState<string | null>(null);
   const connectionsRef = useRef<Map<string, DataConnection>>(new Map());
+  const statusCheckInterval = useRef<NodeJS.Timeout | null>(null);
 
   // Add message to chat
   const addMessage = useCallback((peerId: string, content: string, sender: string, isLocal: boolean) => {
@@ -49,6 +50,11 @@ export const useFriendChat = (localUsername: string, peer: any, onConnectionEsta
           existingHistory.push(chatHistory);
         }
         localStorage.setItem('chatHistory', JSON.stringify(existingHistory));
+        
+        // 触发好友列表更新事件
+        window.dispatchEvent(new CustomEvent('chatHistoryUpdated', {
+          detail: { peerId }
+        }));
       }
       return updated;
     });
@@ -114,6 +120,13 @@ export const useFriendChat = (localUsername: string, peer: any, onConnectionEsta
     // Try to connect
     try {
       console.log(`💬 Starting chat connection to ${username} (${peerId})`);
+      
+      // 检查主连接状态，避免在连接过程中创建聊天连接
+      if (!peer || !peer.open) {
+        console.warn('Main peer connection not ready, cannot start chat');
+        return;
+      }
+      
       const conn = peer.connect(peerId, { 
         metadata: { type: 'friend_chat' },
         reliable: true // 确保消息可靠传输
@@ -131,11 +144,6 @@ export const useFriendChat = (localUsername: string, peer: any, onConnectionEsta
           return updated;
         });
         connectionsRef.current.set(peerId, conn);
-        
-        // 更新好友在线状态
-        window.dispatchEvent(new CustomEvent('friendStatusUpdate', {
-          detail: { peerId, isOnline: true, lastSeen: Date.now() }
-        }));
         
         // 通知文件传输管理器
         if (onConnectionEstablished) {
@@ -168,11 +176,6 @@ export const useFriendChat = (localUsername: string, peer: any, onConnectionEsta
           return updated;
         });
         connectionsRef.current.delete(peerId);
-        
-        // 更新好友离线状态
-        window.dispatchEvent(new CustomEvent('friendStatusUpdate', {
-          detail: { peerId, isOnline: false, lastSeen: Date.now() }
-        }));
       });
       
       conn.on('error', (error) => {
@@ -279,11 +282,6 @@ export const useFriendChat = (localUsername: string, peer: any, onConnectionEsta
         
         connectionsRef.current.set(peerId, conn);
         
-        // 更新好友在线状态
-        window.dispatchEvent(new CustomEvent('friendStatusUpdate', {
-          detail: { peerId, isOnline: true, lastSeen: Date.now() }
-        }));
-        
         // 通知文件传输管理器
         if (onConnectionEstablished) {
           onConnectionEstablished(peerId, conn);
@@ -302,11 +300,6 @@ export const useFriendChat = (localUsername: string, peer: any, onConnectionEsta
           return updated;
         });
         connectionsRef.current.delete(peerId);
-        
-        // 更新好友离线状态
-        window.dispatchEvent(new CustomEvent('friendStatusUpdate', {
-          detail: { peerId, isOnline: false, lastSeen: Date.now() }
-        }));
       });
     }
   }, [activeChats, addMessage, addFileMessage, onConnectionEstablished]);
@@ -322,9 +315,50 @@ export const useFriendChat = (localUsername: string, peer: any, onConnectionEsta
     }
   }, [peer, handleIncomingConnection]);
 
+  // Check connection status periodically
+  const checkConnectionStatus = useCallback(() => {
+    setActiveChats(prev => {
+      const updated = new Map(prev);
+      let hasChanges = false;
+      
+      updated.forEach((chat, peerId) => {
+        const connection = connectionsRef.current.get(peerId);
+        const isActuallyConnected = connection && connection.open && !connection.destroyed;
+        
+        if (chat.isConnected !== isActuallyConnected) {
+          console.log(`🔄 Chat connection status changed for ${chat.username}: ${isActuallyConnected ? 'connected' : 'disconnected'}`);
+          chat.isConnected = !!isActuallyConnected;
+          hasChanges = true;
+        }
+      });
+      
+      return hasChanges ? new Map(updated) : prev;
+    });
+  }, []);
+
+  // Start periodic status checking
+  useEffect(() => {
+    if (activeChats.size > 0) {
+      statusCheckInterval.current = setInterval(() => {
+        checkConnectionStatus();
+      }, 5000); // Check every 5 seconds
+      
+      return () => {
+        if (statusCheckInterval.current) {
+          clearInterval(statusCheckInterval.current);
+          statusCheckInterval.current = null;
+        }
+      };
+    }
+  }, [activeChats.size, checkConnectionStatus]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      if (statusCheckInterval.current) {
+        clearInterval(statusCheckInterval.current);
+        statusCheckInterval.current = null;
+      }
       connectionsRef.current.forEach(conn => conn.close());
       connectionsRef.current.clear();
     };

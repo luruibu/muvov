@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { QRCodeModal } from './QRCodeModal';
 import { Friend, Identity } from '../types';
 import { InputSanitizer } from '../utils/sanitizer';
@@ -29,10 +29,26 @@ export const FriendsList: React.FC<FriendsListProps> = ({
   const [showQRModal, setShowQRModal] = useState(false);
   const [qrMode, setQrMode] = useState<'generate' | 'scan'>('generate');
   const [currentTime, setCurrentTime] = useState(Date.now());
+  const [lastMessageUpdate, setLastMessageUpdate] = useState(0);
 
-
-
-
+  // Get last message for a friend
+  const getLastMessage = useCallback((peerId: string) => {
+    try {
+      const chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '[]');
+      const friendChat = chatHistory.find((h: any) => h.peerId === peerId);
+      if (friendChat && friendChat.messages && friendChat.messages.length > 0) {
+        const lastMsg = friendChat.messages[friendChat.messages.length - 1];
+        return {
+          content: lastMsg.content || '',
+          isLocal: lastMsg.isLocal || false,
+          timestamp: lastMsg.timestamp || 0
+        };
+      }
+    } catch (error) {
+      console.warn('Failed to get last message:', error);
+    }
+    return null;
+  }, [lastMessageUpdate]);
 
   // Update current time every minute for relative time display
   useEffect(() => {
@@ -89,7 +105,19 @@ export const FriendsList: React.FC<FriendsListProps> = ({
     return () => {
       window.removeEventListener('autoAddFriend', handleAutoAddFriend);
     };
-  }, [peerInstance, currentIdentity]); // 移除 friends 和 setFriends 依赖
+  }, [peerInstance, currentIdentity]);
+
+  // Listen for chat history updates
+  useEffect(() => {
+    const handleChatHistoryUpdate = () => {
+      setLastMessageUpdate(Date.now());
+    };
+
+    window.addEventListener('chatHistoryUpdated', handleChatHistoryUpdate);
+    return () => {
+      window.removeEventListener('chatHistoryUpdated', handleChatHistoryUpdate);
+    };
+  }, []); // 移除 friends 和 setFriends 依赖
 
   const addFriend = async () => {
     if (!newFriendId.trim() || !newFriendName.trim()) {
@@ -357,7 +385,17 @@ export const FriendsList: React.FC<FriendsListProps> = ({
                     </span>
                   </div>
                   <div className="text-slate-400 text-xs">
-                    {formatLastSeen(friend.lastSeen)}
+                    {(() => {
+                      const lastMsg = getLastMessage(friend.peerId);
+                      if (lastMsg) {
+                        const prefix = lastMsg.isLocal ? 'You: ' : `${friend.username}: `;
+                        const content = lastMsg.content.length > 30 
+                          ? lastMsg.content.substring(0, 30) + '...' 
+                          : lastMsg.content;
+                        return `${prefix}${content}`;
+                      }
+                      return formatLastSeen(friend.lastSeen);
+                    })()}
                   </div>
                 </div>
 

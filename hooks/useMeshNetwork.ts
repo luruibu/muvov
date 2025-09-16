@@ -92,27 +92,48 @@ export const useMeshNetwork = (localUsername: string, customPeerId?: string) => 
 
   // Setup peer event listeners
   const setupPeerEventListeners = useCallback((peer: Peer) => {
-
-
-    peer.on('disconnected', () => {
-      console.log('⚠️ Peer disconnected, attempting to reconnect...');
-      setIsReady(false);
-      
-
-      
-      // Try to reconnect
-      setTimeout(() => {
-        if (peer && !peer.destroyed) {
-          peer.reconnect();
+    // 只监听主连接的断开事件
+    const handleDisconnected = () => {
+      // 确保这是主连接的断开事件
+      if (peerRef.current === peer) {
+        console.log('⚠️ Main peer disconnected');
+        setIsReady(false);
+        
+        // 移动端优化：检查是否是后台切换导致的断开
+        if (document.hidden) {
+          console.log('📱 Disconnected while in background, will reconnect when visible');
+          // 后台断开不立即重连，等待页面可见时再处理
+          return;
         }
-      }, 1000);
-    });
+        
+        // 前台断开才尝试重连
+        setTimeout(() => {
+          if (peer && !peer.destroyed && peerRef.current === peer && !document.hidden) {
+            console.log('🔄 Attempting foreground reconnect');
+            peer.reconnect();
+          }
+        }, 1000);
+      }
+    };
 
-    peer.on('error', (error) => {
-      console.error('❌ PeerJS error:', error);
-      setIsReady(false);
-      handlePeerError(error);
-    });
+    // 只监听主连接的错误事件
+    const handleError = (error: any) => {
+      // 确保这是主连接的错误
+      if (peerRef.current === peer) {
+        console.error('❌ Main PeerJS error:', error);
+        setIsReady(false);
+        handlePeerError(error);
+      }
+    };
+
+    peer.on('disconnected', handleDisconnected);
+    peer.on('error', handleError);
+    
+    // 返回清理函数
+    return () => {
+      peer.off('disconnected', handleDisconnected);
+      peer.off('error', handleError);
+    };
   }, [handlePeerError]);
 
   // Initialize PeerJS with duplicate prevention
@@ -165,7 +186,10 @@ export const useMeshNetwork = (localUsername: string, customPeerId?: string) => 
 
       
       // Setup event listeners for the established connection
-      setupPeerEventListeners(peer);
+      const cleanupListeners = setupPeerEventListeners(peer);
+      
+      // 存储清理函数以便后续使用
+      (peer as any)._cleanupListeners = cleanupListeners;
       
     } catch (error) {
       console.error('❌ Failed to initialize peer:', error);
@@ -246,15 +270,40 @@ export const useMeshNetwork = (localUsername: string, customPeerId?: string) => 
     const handleVisibilityChange = () => {
       const visible = !document.hidden;
       setIsVisible(visible);
+      
       if (visible && !isReady) {
-        attemptReconnect();
+        console.log('👀 Page became visible, checking connection status');
+        
+        // 移动端优化：强制重置所有重连状态
+        console.log('📱 Mobile background recovery: resetting all reconnect states');
+        reconnectAttempts.current = 0;
+        reconnectingRef.current = false;
+        initializingRef.current = false;
+        setConnectionStatus('');
+        
+        // 清理现有连接并创建新连接
+        if (peerRef.current && !peerRef.current.destroyed) {
+          console.log('🔄 Destroying existing connection for fresh start');
+          try {
+            peerRef.current.destroy();
+          } catch (e) {}
+          peerRef.current = null;
+        }
+        
+        // 立即创建新连接
+        console.log('🚀 Creating fresh connection after background recovery');
+        initializePeer();
       }
     };
 
     const handleOnline = () => {
       setIsOnline(true);
       if (!isReady) {
-        attemptReconnect();
+        setTimeout(() => {
+          if (!isReady) {
+            attemptReconnect();
+          }
+        }, 1000);
       }
     };
 
@@ -312,26 +361,10 @@ export const useMeshNetwork = (localUsername: string, customPeerId?: string) => 
       }
     };
     
-    // 使用visibilitychange更精确地检测页面状态
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        console.log('👁️ Page hidden, delaying connection cleanup');
-        // 页面隐藏时不立即断开，给刷新操作留时间
-      } else if (document.visibilityState === 'visible') {
-        console.log('👀 Page visible, checking connection status');
-        // 页面重新显示时检查连接
-        if (!isReady && (!peerRef.current || peerRef.current.destroyed)) {
-          setTimeout(() => attemptReconnect(), 1000);
-        }
-      }
-    };
-    
     window.addEventListener('beforeunload', handleBeforeUnload);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
     
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
       
       // 开发环境下不清理连接（React严格模式）
       if (process.env.NODE_ENV === 'production') {

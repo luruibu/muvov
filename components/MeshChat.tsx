@@ -412,7 +412,7 @@ export const MeshChat: React.FC<MeshChatProps> = ({ identity, onLogout }) => {
               <h2 className="text-xl font-bold text-white">{currentChat.username}</h2>
               <div className="flex items-center gap-2">
                 <div className={`w-3 h-3 rounded-full ${currentChat.isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                <span className="text-sm text-slate-400">{currentChat.isConnected ? 'Online' : 'Offline'}</span>
+                <span className="text-sm text-slate-400">{currentChat.isConnected ? 'Secure Chat Connected' : 'Secure Chat Disconnected'}</span>
                 <button
                   onClick={() => closeChat(currentChat.peerId)}
                   className="text-slate-400 hover:text-slate-300 text-xl"

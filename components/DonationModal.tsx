@@ -23,7 +23,7 @@ export const DonationModal: React.FC<DonationModalProps> = ({ isOpen, onClose })
             Help keep this project free and open source! Your support helps with development and server costs.
           </p>
           
-          <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" className="inline-block">
+          <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank" className="inline-block">
             <input type="hidden" name="cmd" value="_s-xclick" />
             <input type="hidden" name="hosted_button_id" value="66X23LVXDKZAN" />
             <table className="w-full mb-4">
