@@ -77,6 +77,8 @@ export const useSimpleCall = (peer: any) => {
       });
 
       currentCallRef.current = call;
+      
+
 
       // Handle remote stream
       call.on('stream', (remoteStream: MediaStream) => {
@@ -98,13 +100,58 @@ export const useSimpleCall = (peer: any) => {
 
       // Handle call close
       call.on('close', () => {
-        console.log('📞 Call ended');
-        endCall();
+        console.log('📞 Call ended by remote');
+        setCallState(prev => {
+          const wasConnected = !!prev.remoteStream;
+          return {
+            ...prev,
+            callError: wasConnected ? 'Call ended by remote' : 'Call was declined'
+          };
+        });
+        setTimeout(() => {
+          endCall();
+        }, 1000);
       });
 
+      // Handle call error
       call.on('error', (error) => {
         console.error('❌ Call error:', error);
-        endCall();
+        setCallState(prev => ({
+          ...prev,
+          callError: 'Call failed - friend may be offline'
+        }));
+        setTimeout(() => {
+          endCall();
+        }, 2000);
+      });
+      
+
+
+      // Handle connection timeout (no answer)
+      const callTimeout = setTimeout(() => {
+        setCallState(prev => {
+          if (currentCallRef.current === call && !prev.remoteStream) {
+            console.log('📞 Call timeout - no answer');
+            setTimeout(() => {
+              endCall();
+            }, 2000);
+            return {
+              ...prev,
+              callError: 'No answer - call timed out'
+            };
+          }
+          return prev;
+        });
+      }, 30000);
+
+      // Clear timeout when call connects
+      call.on('stream', () => {
+        clearTimeout(callTimeout);
+      });
+
+      // Clear timeout when call ends
+      call.on('close', () => {
+        clearTimeout(callTimeout);
       });
 
     } catch (error) {
@@ -117,7 +164,7 @@ export const useSimpleCall = (peer: any) => {
         setCallState(prev => ({ ...prev, callError: null }));
       }, 3000);
     }
-  }, [peer, callState.isInCall]);
+  }, [peer, callState.isInCall, callState.facingMode]);
 
   // Accept incoming call
   const acceptCall = useCallback(async () => {
@@ -179,7 +226,19 @@ export const useSimpleCall = (peer: any) => {
 
       // Handle call close
       incomingCall.on('close', () => {
-        console.log('📞 Call ended');
+        console.log('📞 Call ended by remote');
+        setCallState(prev => ({
+          ...prev,
+          callError: 'Call ended by remote'
+        }));
+        setTimeout(() => {
+          endCall();
+        }, 1000);
+      });
+
+      // Handle call error
+      incomingCall.on('error', (error) => {
+        console.error('❌ Call error:', error);
         endCall();
       });
 
@@ -191,34 +250,61 @@ export const useSimpleCall = (peer: any) => {
         incomingCall: null
       }));
     }
-  }, [callState.incomingCall]);
+  }, [callState.incomingCall, callState.facingMode]);
+
+  // Send hangup signal
+  const sendHangupSignal = useCallback((targetPeer: string) => {
+    if (peer) {
+      const conn = peer.connect(targetPeer);
+      conn.on('open', () => {
+        conn.send({ type: 'call_hangup' });
+      });
+    }
+  }, [peer]);
 
   // Reject call
   const rejectCall = useCallback(() => {
     const incomingCall = callState.incomingCall;
     if (incomingCall) {
-      console.log('🚫 Rejecting call');
+      sendHangupSignal(incomingCall.peer);
       incomingCall.close();
-      setCallState(prev => ({
-        ...prev,
-        incomingCall: null
-      }));
+      setCallState(prev => ({ ...prev, incomingCall: null }));
     }
-  }, [callState.incomingCall]);
+  }, [callState.incomingCall, sendHangupSignal]);
 
   // End call
   const endCall = useCallback(() => {
     console.log('📞 Ending call');
+
+    // Send hangup signal if we have an active call
+    if (currentCallRef.current) {
+      sendHangupSignal(currentCallRef.current.peer);
+    }
+
+
 
     // Stop local stream
     if (callState.localStream) {
       callState.localStream.getTracks().forEach(track => track.stop());
     }
 
-    // Close call
+    // Close call connection
     if (currentCallRef.current) {
-      currentCallRef.current.close();
+      try {
+        currentCallRef.current.close();
+      } catch (error) {
+        console.log('Error closing call:', error);
+      }
       currentCallRef.current = null;
+    }
+
+    // Close incoming call if exists
+    if (callState.incomingCall) {
+      try {
+        callState.incomingCall.close();
+      } catch (error) {
+        console.log('Error closing incoming call:', error);
+      }
     }
 
     // Clear video elements
@@ -229,8 +315,8 @@ export const useSimpleCall = (peer: any) => {
       remoteVideoRef.current.srcObject = null;
     }
 
-    // Save call record
-    if (callState.callStartTime) {
+    // Save call record only if call was actually connected
+    if (callState.callStartTime && callState.isInCall) {
       const duration = Math.floor((Date.now() - callState.callStartTime) / 1000);
       const callRecord = {
         id: Date.now().toString(),
@@ -257,7 +343,7 @@ export const useSimpleCall = (peer: any) => {
       callStartTime: null,
       callDuration: 0
     });
-  }, [callState.localStream, callState.callStartTime, callState.isVideoCall]);
+  }, [callState.localStream, callState.callStartTime, callState.isVideoCall, callState.isInCall, callState.incomingCall]);
 
   // Update call duration
   useEffect(() => {
@@ -337,17 +423,23 @@ export const useSimpleCall = (peer: any) => {
   const handleIncomingCall = useCallback((call: MediaConnection) => {
     console.log('📞 Incoming call from:', call.peer, 'Video:', call.metadata?.isVideoCall);
     
-    if (callState.isInCall) {
-      console.log('Already in call, rejecting');
-      call.close();
-      return;
-    }
+    setCallState(prev => {
+      if (prev.isInCall || prev.incomingCall) {
+        console.log('Already in call or has incoming call, rejecting');
+        call.close();
+        return prev;
+      }
+      
 
-    setCallState(prev => ({
-      ...prev,
-      incomingCall: call,
-      isVideoCall: call.metadata?.isVideoCall || false
-    }));
+      
+      return {
+        ...prev,
+        incomingCall: call,
+        isVideoCall: call.metadata?.isVideoCall || false
+      };
+    });
+
+
 
     // Auto-reject after 30 seconds
     const timeoutId = setTimeout(() => {
@@ -357,16 +449,44 @@ export const useSimpleCall = (peer: any) => {
           call.close();
           return {
             ...prev,
-            incomingCall: null
+            incomingCall: null,
+            callError: 'Call timed out - no response'
           };
         }
         return prev;
       });
     }, 30000);
 
-    // Clear timeout if call is answered or rejected
+    // Handle call close/hangup from caller
     call.on('close', () => {
+      console.log('📞 Caller hung up');
       clearTimeout(timeoutId);
+      setCallState(prev => ({
+        ...prev,
+        incomingCall: null,
+        callError: 'Caller ended the call'
+      }));
+      
+      setTimeout(() => {
+        setCallState(prev => ({ ...prev, callError: null }));
+      }, 3000);
+    });
+    
+
+
+    // Handle call error
+    call.on('error', (error) => {
+      console.log('📞 Call error:', error);
+      clearTimeout(timeoutId);
+      setCallState(prev => ({
+        ...prev,
+        incomingCall: null,
+        callError: 'Call failed'
+      }));
+      
+      setTimeout(() => {
+        setCallState(prev => ({ ...prev, callError: null }));
+      }, 3000);
     });
   }, [callState.isInCall]);
 
@@ -374,6 +494,30 @@ export const useSimpleCall = (peer: any) => {
   useEffect(() => {
     if (peer) {
       peer.on('call', handleIncomingCall);
+      
+      // Listen for data connections (hangup/reject signals)
+      peer.on('connection', (conn) => {
+        conn.on('data', (data) => {
+          if (data.type === 'call_hangup') {
+            console.log('📞 Received hangup signal');
+            setCallState(prev => ({
+              ...prev,
+              incomingCall: null,
+              callError: prev.incomingCall ? 'Call was declined' : 'Call ended by remote'
+            }));
+            
+            setTimeout(() => {
+              setCallState(prev => ({ ...prev, callError: null }));
+            }, 3000);
+            
+            // End current call if in progress
+            if (currentCallRef.current) {
+              endCall();
+            }
+          }
+        });
+      });
+      
       return () => {
         peer.off('call', handleIncomingCall);
       };
@@ -383,9 +527,6 @@ export const useSimpleCall = (peer: any) => {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (callState.localStream) {
-        callState.localStream.getTracks().forEach(track => track.stop());
-      }
       if (currentCallRef.current) {
         currentCallRef.current.close();
       }
@@ -399,7 +540,7 @@ export const useSimpleCall = (peer: any) => {
     startCall,
     acceptCall,
     rejectCall,
-    endCall,
+    endCall: endCall,
     switchCamera,
     formatDuration
   };

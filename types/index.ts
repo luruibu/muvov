@@ -38,6 +38,8 @@ export interface Message {
   transferId?: string;
   fileName?: string;
   fileSize?: number;
+  hash?: string;
+  status?: 'sending' | 'delivered' | 'failed';
 }
 
 export interface RoomMessage {

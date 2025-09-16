@@ -30,6 +30,7 @@ export const FriendsList: React.FC<FriendsListProps> = ({
   const [qrMode, setQrMode] = useState<'generate' | 'scan'>('generate');
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [lastMessageUpdate, setLastMessageUpdate] = useState(0);
+  const [showAddFriend, setShowAddFriend] = useState(false);
 
   // Get last message for a friend
   const getLastMessage = useCallback((peerId: string) => {
@@ -308,62 +309,77 @@ export const FriendsList: React.FC<FriendsListProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Add Friend */}
-      <div className="space-y-2">
-        <h3 className="text-sm font-medium text-slate-300">Add Friend</h3>
-        <input
-          type="text"
-          value={newFriendId}
-          onChange={(e) => {
-            setNewFriendId(e.target.value);
-            setError('');
-          }}
-          placeholder="Friend's Peer ID"
-          className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-slate-100 text-xs"
-        />
-        <input
-          type="text"
-          value={newFriendName}
-          onChange={(e) => {
-            setNewFriendName(e.target.value);
-            setError('');
-          }}
-          placeholder="Friend's Username"
-          className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-slate-100 text-xs"
-        />
-        {error && (
-          <div className="text-red-400 text-xs">{error}</div>
-        )}
-        {notification && (
-          <div className="text-yellow-400 text-xs mt-2">{notification}</div>
-        )}
+      {/* Add Friend - Collapsed */}
+      <div className="mb-3">
         <button
-          onClick={addFriend}
-          className="w-full bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded text-xs mt-2"
+          onClick={() => setShowAddFriend(!showAddFriend)}
+          className="w-full flex items-center justify-between p-2 bg-slate-700 hover:bg-slate-600 rounded text-xs text-slate-300"
         >
-          Add Friend
+          <span>➕ Add Friend</span>
+          <span>{showAddFriend ? '▼' : '▶'}</span>
         </button>
         
-        <div className="flex gap-2 mt-2">
-          <button
-            onClick={() => {
-              setQrMode('generate');
-              setShowQRModal(true);
-            }}
-            className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 px-3 rounded text-xs"
-          >
-            📱 My QR Code
-          </button>
-          <button
-            onClick={() => {
-              setQrMode('scan');
-              setShowQRModal(true);
-            }}
-            className="flex-1 bg-purple-600 hover:bg-purple-500 text-white py-2 px-3 rounded text-xs"
-          >
-            📷 Scan QR Code
-          </button>
-        </div>
+        {showAddFriend && (
+          <div className="mt-2 space-y-2 p-2 bg-slate-750 rounded">
+            {/* QR Code Buttons */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setQrMode('generate');
+                  setShowQRModal(true);
+                }}
+                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 px-3 rounded text-xs flex items-center justify-center gap-1"
+              >
+                📱 My QR Code
+              </button>
+              <button
+                onClick={() => {
+                  setQrMode('scan');
+                  setShowQRModal(true);
+                }}
+                className="flex-1 bg-purple-600 hover:bg-purple-500 text-white py-2 px-3 rounded text-xs flex items-center justify-center gap-1"
+              >
+                📷 Scan QR Code
+              </button>
+            </div>
+            
+            {/* Manual Add Form */}
+            <div className="flex gap-1">
+              <input
+                type="text"
+                value={newFriendId}
+                onChange={(e) => {
+                  setNewFriendId(e.target.value);
+                  setError('');
+                }}
+                placeholder="Peer ID"
+                className="flex-1 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-slate-100 text-xs"
+              />
+              <input
+                type="text"
+                value={newFriendName}
+                onChange={(e) => {
+                  setNewFriendName(e.target.value);
+                  setError('');
+                }}
+                placeholder="Username"
+                className="flex-1 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-slate-100 text-xs"
+              />
+            </div>
+            {error && (
+              <div className="text-red-400 text-xs">{error}</div>
+            )}
+            {notification && (
+              <div className="text-yellow-400 text-xs">{notification}</div>
+            )}
+            <button
+              onClick={addFriend}
+              className="w-full bg-green-600 hover:bg-green-500 text-white px-2 py-1 rounded text-xs"
+            >
+              Add Friend
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Friends List */}

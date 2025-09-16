@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import type { DataConnection } from 'peerjs';
 import { Message } from '../types';
+import { MessageIntegrity } from '../utils/messageIntegrity';
 
 interface FriendChat {
   peerId: string;
@@ -17,14 +18,16 @@ export const useFriendChat = (localUsername: string, peer: any, onConnectionEsta
   const statusCheckInterval = useRef<NodeJS.Timeout | null>(null);
 
   // Add message to chat
-  const addMessage = useCallback((peerId: string, content: string, sender: string, isLocal: boolean) => {
+  const addMessage = useCallback(async (peerId: string, content: string, sender: string, isLocal: boolean, messageId?: string, hash?: string) => {
     const message: Message = {
-      id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+      id: messageId || MessageIntegrity.generateMessageId(),
       content,
       sender,
       timestamp: Date.now(),
       isLocal,
-      type: 'text'
+      type: 'text',
+      hash,
+      status: isLocal ? 'sending' : 'delivered'
     };
 
     setActiveChats(prev => {
@@ -117,22 +120,36 @@ export const useFriendChat = (localUsername: string, peer: any, onConnectionEsta
       isConnected: false
     };
 
+    // 创建聊天窗口但不立即尝试连接
+    setActiveChats(prev => new Map(prev.set(peerId, newChat)));
+    setCurrentChatPeerId(peerId);
+    
+    // 只有在主连接就绪时才尝试建立聊天连接
+    if (!peer || !peer.open) {
+      console.log(`💬 Chat created for ${username}, will connect when peer is ready`);
+      return;
+    }
+    
     // Try to connect
     try {
       console.log(`💬 Starting chat connection to ${username} (${peerId})`);
       
-      // 检查主连接状态，避免在连接过程中创建聊天连接
-      if (!peer || !peer.open) {
-        console.warn('Main peer connection not ready, cannot start chat');
-        return;
-      }
-      
       const conn = peer.connect(peerId, { 
         metadata: { type: 'friend_chat' },
-        reliable: true // 确保消息可靠传输
+        reliable: true, // 确保消息可靠传输
+        serialization: 'json'
       });
       
+      // 设置连接超时，避免无限等待
+      const connectionTimeout = setTimeout(() => {
+        if (!conn.open) {
+          console.log(`⏰ Chat connection timeout for ${username}, friend may be offline`);
+          conn.close();
+        }
+      }, 5000); // 5秒超时，更快失败
+      
       conn.on('open', () => {
+        clearTimeout(connectionTimeout); // 清除超时定时器
         console.log(`✅ Friend chat connected to ${username} (${peerId})`);
         setActiveChats(prev => {
           const updated = new Map(prev);
@@ -152,14 +169,49 @@ export const useFriendChat = (localUsername: string, peer: any, onConnectionEsta
       });
       
       conn.on('error', (error) => {
-        console.error(`❌ Friend chat connection error with ${username}:`, error);
+        clearTimeout(connectionTimeout); // 清除超时定时器
+        console.log(`🔌 Friend ${username} appears to be offline, connection failed silently`);
+        // 不显示错误，因为这可能只是好友离线
       });
 
-      conn.on('data', (data: any) => {
+      conn.on('data', async (data: any) => {
         if (data.type === 'friend_message') {
-          addMessage(peerId, data.content, data.sender, false);
+          // 验证消息完整性
+          if (data.hash) {
+            const isValid = await MessageIntegrity.verifyHash(data.content, data.hash);
+            if (!isValid) {
+              console.warn('Message integrity check failed');
+              return;
+            }
+          }
+          
+          await addMessage(peerId, data.content, data.sender, false, data.id, data.hash);
+          
+          // 发送确认
+          if (data.id) {
+            conn.send({
+              type: 'message_ack',
+              messageId: data.id
+            });
+          }
+        } else if (data.type === 'message_ack') {
+          // 更新消息状态为已送达
+          setActiveChats(prev => {
+            const updated = new Map(prev);
+            const chat = updated.get(peerId);
+            if (chat) {
+              const messageIndex = chat.messages.findIndex(m => m.id === data.messageId);
+              if (messageIndex >= 0) {
+                chat.messages = [...chat.messages];
+                chat.messages[messageIndex] = {
+                  ...chat.messages[messageIndex],
+                  status: 'delivered'
+                };
+              }
+            }
+            return updated;
+          });
         } else if (data.type === 'file_notification') {
-          // 添加文件传输通知消息
           addFileMessage(peerId, data.fileName, data.fileSize, data.transferId, data.sender, false);
         }
       });
@@ -177,34 +229,17 @@ export const useFriendChat = (localUsername: string, peer: any, onConnectionEsta
         });
         connectionsRef.current.delete(peerId);
       });
-      
-      conn.on('error', (error) => {
-        console.error(`❌ Chat connection error with ${username}:`, error);
-        // 连接错误时也要清理状态
-        setActiveChats(prev => {
-          const updated = new Map(prev);
-          const chat = updated.get(peerId);
-          if (chat) {
-            chat.isConnected = false;
-            chat.connection = null;
-          }
-          return updated;
-        });
-        connectionsRef.current.delete(peerId);
-      });
 
-      newChat.connection = conn;
-      setActiveChats(prev => new Map(prev.set(peerId, newChat)));
-      setCurrentChatPeerId(peerId);
+      // 连接已在 conn.on('open') 中设置，这里不需要重复设置
       
     } catch (error) {
       console.error('Failed to start friend chat:', error);
     }
-  }, [peer, activeChats, addMessage, addFileMessage, onConnectionEstablished]);
+  }, [peer, addMessage, addFileMessage, onConnectionEstablished]);
 
 
   // Send message to friend
-  const sendMessage = useCallback((peerId: string, content: string) => {
+  const sendMessage = useCallback(async (peerId: string, content: string) => {
     const connection = connectionsRef.current.get(peerId);
     if (!connection || !content.trim()) {
       console.warn('No connection or empty message');
@@ -217,15 +252,20 @@ export const useFriendChat = (localUsername: string, peer: any, onConnectionEsta
     }
 
     try {
+      const messageId = MessageIntegrity.generateMessageId();
+      const hash = await MessageIntegrity.generateHash(content.trim());
+      
       connection.send({
         type: 'friend_message',
+        id: messageId,
         content: content.trim(),
         sender: localUsername,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        hash
       });
 
       // Add to local messages
-      addMessage(peerId, content.trim(), localUsername, true);
+      await addMessage(peerId, content.trim(), localUsername, true, messageId, hash);
       return true;
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -262,20 +302,60 @@ export const useFriendChat = (localUsername: string, peer: any, onConnectionEsta
         // Find or create chat for this peer
         const peerId = conn.peer;
         
-        if (!activeChats.has(peerId)) {
-          const newChat: FriendChat = {
-            peerId,
-            username: data.sender,
-            messages: [],
-            connection: conn,
-            isConnected: true
-          };
-          setActiveChats(prev => new Map(prev.set(peerId, newChat)));
-        }
+        setActiveChats(prev => {
+          if (!prev.has(peerId)) {
+            const newChat: FriendChat = {
+              peerId,
+              username: data.sender,
+              messages: [],
+              connection: conn,
+              isConnected: true
+            };
+            return new Map(prev.set(peerId, newChat));
+          }
+          return prev;
+        });
         
         // 处理不同类型的消息
         if (data.type === 'friend_message') {
-          addMessage(peerId, data.content, data.sender, false);
+          // 验证消息完整性
+          const processMessage = async () => {
+            if (data.hash) {
+              const isValid = await MessageIntegrity.verifyHash(data.content, data.hash);
+              if (!isValid) {
+                console.warn('Message integrity check failed');
+                return;
+              }
+            }
+            
+            await addMessage(peerId, data.content, data.sender, false, data.id, data.hash);
+            
+            // 发送确认
+            if (data.id) {
+              conn.send({
+                type: 'message_ack',
+                messageId: data.id
+              });
+            }
+          };
+          processMessage();
+        } else if (data.type === 'message_ack') {
+          // 更新消息状态为已送达
+          setActiveChats(prev => {
+            const updated = new Map(prev);
+            const chat = updated.get(peerId);
+            if (chat) {
+              const messageIndex = chat.messages.findIndex(m => m.id === data.messageId);
+              if (messageIndex >= 0) {
+                chat.messages = [...chat.messages];
+                chat.messages[messageIndex] = {
+                  ...chat.messages[messageIndex],
+                  status: 'delivered'
+                };
+              }
+            }
+            return updated;
+          });
         } else if (data.type === 'file_notification') {
           addFileMessage(peerId, data.fileName, data.fileSize, data.transferId, data.sender, false);
         }
@@ -302,7 +382,7 @@ export const useFriendChat = (localUsername: string, peer: any, onConnectionEsta
         connectionsRef.current.delete(peerId);
       });
     }
-  }, [activeChats, addMessage, addFileMessage, onConnectionEstablished]);
+  }, [addMessage, addFileMessage, onConnectionEstablished]);
 
   // Setup peer event listener
   useEffect(() => {

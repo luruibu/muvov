@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useMeshNetwork } from '../hooks/useMeshNetwork';
 import { useSimpleCall } from '../hooks/useSimpleCall';
 import { useIndependentFriendsStatus } from '../hooks/useIndependentFriendsStatus';
@@ -22,6 +22,7 @@ import { CallHistoryModal } from './CallHistoryModal';
 import { DonationModal } from './DonationModal';
 
 import { Identity, Message, RoomMessage } from '../types';
+import { WakeLockManager } from '../utils/wakeLock';
 
 interface MeshChatProps {
   identity: Identity;
@@ -36,6 +37,7 @@ export const MeshChat: React.FC<MeshChatProps> = ({ identity, onLogout }) => {
   const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [showCallHistory, setShowCallHistory] = useState(false);
   const [showDonationModal, setShowDonationModal] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
 
   const [chatInputValue, setChatInputValue] = useState('');
@@ -98,12 +100,14 @@ export const MeshChat: React.FC<MeshChatProps> = ({ identity, onLogout }) => {
     setCurrentChatPeerId
   } = useFriendChat(identity.username, peerInstance, registerConnection);
 
-  // Create friends map for media call
-  const friendsMap = new Map(friends.map(f => [f.peerId, { 
-    peerId: f.peerId, 
-    username: f.username, 
-    isAlive: f.isOnline 
-  }]));
+  // Create friends map for media call (memoized)
+  const friendsMap = useMemo(() => 
+    new Map(friends.map(f => [f.peerId, { 
+      peerId: f.peerId, 
+      username: f.username, 
+      isAlive: f.isOnline 
+    }])), [friends]
+  );
 
   const {
     callState,
@@ -121,9 +125,37 @@ export const MeshChat: React.FC<MeshChatProps> = ({ identity, onLogout }) => {
 
   const cacheStats = getCacheStats();
 
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+        setIsFullscreen(true);
+      } else {
+        await document.exitFullscreen();
+        setIsFullscreen(false);
+      }
+    } catch (error) {
+      console.log('Fullscreen not supported, using layout fullscreen');
+      setIsFullscreen(!isFullscreen);
+    }
+  };
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [roomMessages]);
+
+  // 键盘快捷键支持
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'F11') {
+        e.preventDefault();
+        toggleFullscreen();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [toggleFullscreen]);
 
 
 
@@ -159,7 +191,7 @@ export const MeshChat: React.FC<MeshChatProps> = ({ identity, onLogout }) => {
         peerInstance.off('connection', handleConnection);
       };
     }
-  }, [peerInstance, friends]);
+  }, [peerInstance]);
 
 
 
@@ -199,7 +231,7 @@ export const MeshChat: React.FC<MeshChatProps> = ({ identity, onLogout }) => {
     }
     
     if (!currentChat.isConnected) {
-      alert('Connection lost. Please try reconnecting.');
+      alert('Friend is offline. Message cannot be sent.');
       return;
     }
     
@@ -267,69 +299,105 @@ export const MeshChat: React.FC<MeshChatProps> = ({ identity, onLogout }) => {
     return <p>{msg.content}</p>;
   };
 
+  // 监听浏览器全屏状态变化
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  // 屏幕唤醒管理
+  useEffect(() => {
+    const shouldKeepAwake = currentChat?.isConnected || callState.isInCall;
+    
+    if (shouldKeepAwake && !WakeLockManager.isActive()) {
+      WakeLockManager.requestWakeLock(callState.isInCall ? 'call' : 'chat');
+    } else if (!shouldKeepAwake && WakeLockManager.isActive()) {
+      WakeLockManager.releaseWakeLock();
+    }
+  }, [currentChat?.isConnected, callState.isInCall]);
+
+  // 页面可见性变化处理
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      WakeLockManager.handleVisibilityChange();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
+  // 组件卸载时释放唤醒锁
+  useEffect(() => {
+    return () => {
+      WakeLockManager.releaseWakeLock();
+    };
+  }, []);
+
 
   return (
     <div className="h-screen w-screen flex flex-col md:flex-row bg-slate-900">
       {/* Sidebar */}
-      <aside className="w-full md:w-64 lg:w-72 bg-slate-800 p-4 border-b md:border-b-0 md:border-r border-slate-700 flex flex-col">
+      <aside className={`${isFullscreen ? 'hidden' : 'w-full md:w-64 lg:w-72'} bg-slate-800 p-4 border-b md:border-b-0 md:border-r border-slate-700 flex flex-col`}>
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <h1 className="text-2xl font-bold text-sky-400">Mesh Chat</h1>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setIsTransferModalOpen(true)}
-                className="text-slate-400 hover:text-slate-300 text-sm relative"
-                title="File Transfers"
-              >
-                📁
-                {(incomingRequests.length > 0 || getActiveTransfers().length > 0) && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                    {incomingRequests.length + getActiveTransfers().length}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={() => setShowCallHistory(true)}
-                className="text-slate-400 hover:text-slate-300 text-sm"
-                title="Call History"
-              >
-                📞
-              </button>
-              <button
-                onClick={() => setShowDebugPanel(true)}
-                className="text-slate-400 hover:text-slate-300 text-sm"
-                title="Debug Panel"
-              >
-                🔧
-              </button>
-              <button
-                onClick={() => setShowSettingsModal(true)}
-                className="text-slate-400 hover:text-slate-300 text-sm"
-                title="Settings"
-              >
-                ⚙️
-              </button>
-              <button
-                onClick={() => setShowBackupModal(true)}
-                className="text-slate-400 hover:text-slate-300 text-sm"
-                title="Backup & Restore"
-              >
-                💾
-              </button>
-              <button
-                onClick={() => setShowDonationModal(true)}
-                className="text-slate-400 hover:text-slate-300 text-sm"
-                title="Support Project"
-              >
-                💝
-              </button>
-              <button
-                onClick={onLogout}
-                className="text-slate-400 hover:text-slate-300 text-sm"
-              >
-                Logout
-              </button>
-            </div>
+          <h1 className="text-2xl font-bold text-sky-400 mb-3">MUVOV Mesh Chat</h1>
+          <div className="flex flex-wrap gap-2 mb-2">
+            <button
+              onClick={() => setIsTransferModalOpen(true)}
+              className="text-slate-400 hover:text-slate-300 text-sm relative"
+              title="File Transfers"
+            >
+              📁
+              {(incomingRequests.length > 0 || getActiveTransfers().length > 0) && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  {incomingRequests.length + getActiveTransfers().length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setShowCallHistory(true)}
+              className="text-slate-400 hover:text-slate-300 text-sm"
+              title="Call History"
+            >
+              📞
+            </button>
+            <button
+              onClick={() => setShowDebugPanel(true)}
+              className="text-slate-400 hover:text-slate-300 text-sm"
+              title="Debug Panel"
+            >
+              🔧
+            </button>
+            <button
+              onClick={() => setShowSettingsModal(true)}
+              className="text-slate-400 hover:text-slate-300 text-sm"
+              title="Settings"
+            >
+              ⚙️
+            </button>
+            <button
+              onClick={() => setShowBackupModal(true)}
+              className="text-slate-400 hover:text-slate-300 text-sm"
+              title="Backup & Restore"
+            >
+              💾
+            </button>
+            <button
+              onClick={() => setShowDonationModal(true)}
+              className="text-slate-400 hover:text-slate-300 text-sm"
+              title="Support Project"
+            >
+              💝
+            </button>
+            <button
+              onClick={onLogout}
+              className="text-slate-400 hover:text-slate-300 text-sm"
+            >
+              Logout
+            </button>
           </div>
           <p className="text-sm text-slate-400">Welcome, <span className="font-semibold">{identity.username}</span></p>
           
@@ -414,7 +482,19 @@ export const MeshChat: React.FC<MeshChatProps> = ({ identity, onLogout }) => {
                 <div className={`w-3 h-3 rounded-full ${currentChat.isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
                 <span className="text-sm text-slate-400">{currentChat.isConnected ? 'Secure Chat Connected' : 'Secure Chat Disconnected'}</span>
                 <button
-                  onClick={() => closeChat(currentChat.peerId)}
+                  onClick={toggleFullscreen}
+                  className="text-slate-400 hover:text-slate-300 text-lg"
+                  title={isFullscreen ? 'Exit Fullscreen (ESC)' : 'Enter Fullscreen (F11)'}
+                >
+                  {isFullscreen ? '🗗' : '🗖'}
+                </button>
+                <button
+                  onClick={() => {
+                    closeChat(currentChat.peerId);
+                    if (isFullscreen) {
+                      setIsFullscreen(false);
+                    }
+                  }}
                   className="text-slate-400 hover:text-slate-300 text-xl"
                   title="Close Chat"
                 >
@@ -430,8 +510,15 @@ export const MeshChat: React.FC<MeshChatProps> = ({ identity, onLogout }) => {
                   <div key={msg.id} className={`flex ${msg.isLocal ? 'justify-end' : 'justify-start'}`}>
                     <div className={`px-4 py-2 rounded-lg max-w-xs md:max-w-md lg:max-w-lg ${msg.isLocal ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-200'}`}>
                       {renderMessageContent(msg)}
-                      <div className="text-xs text-slate-400 mt-1 text-right">
-                        {new Date(msg.timestamp).toLocaleDateString()} {new Date(msg.timestamp).toLocaleTimeString()}
+                      <div className="text-xs text-slate-400 mt-1 text-right flex items-center justify-end gap-1">
+                        <span>{new Date(msg.timestamp).toLocaleDateString()} {new Date(msg.timestamp).toLocaleTimeString()}</span>
+                        {msg.isLocal && (
+                          <span className="text-xs">
+                            {msg.status === 'sending' && '⏳'}
+                            {msg.status === 'delivered' && '✓'}
+                            {msg.status === 'failed' && '❌'}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -440,13 +527,22 @@ export const MeshChat: React.FC<MeshChatProps> = ({ identity, onLogout }) => {
             </div>
 
             {/* Message Input */}
-            <div className="p-4 border-t border-slate-700">
+            <div className="p-4 pb-safe border-t border-slate-700" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
               <div className="relative">
                 <textarea
                   ref={chatInputRef}
                   value={chatInputValue}
                   onChange={(e) => setChatInputValue(e.target.value)}
                   onKeyDown={handleChatInputKeydown}
+                  onFocus={() => {
+                    // 移动端优化：输入框获得焦点时滚动到可视区域
+                    setTimeout(() => {
+                      chatInputRef.current?.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                      });
+                    }, 300);
+                  }}
                   placeholder="Type a message..."
                   className="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 pr-24 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                   rows={1}
@@ -472,7 +568,19 @@ export const MeshChat: React.FC<MeshChatProps> = ({ identity, onLogout }) => {
               <div className="flex items-center gap-2">
                 <span className="text-sm text-slate-400">{currentRoom.members.size} members</span>
                 <button
-                  onClick={leaveRoom}
+                  onClick={toggleFullscreen}
+                  className="text-slate-400 hover:text-slate-300 text-lg"
+                  title={isFullscreen ? 'Exit Fullscreen (ESC)' : 'Enter Fullscreen (F11)'}
+                >
+                  {isFullscreen ? '🗗' : '🗖'}
+                </button>
+                <button
+                  onClick={() => {
+                    leaveRoom();
+                    if (isFullscreen) {
+                      setIsFullscreen(false);
+                    }
+                  }}
                   className="text-slate-400 hover:text-slate-300 text-xl"
                   title="Leave Room"
                 >
@@ -499,13 +607,22 @@ export const MeshChat: React.FC<MeshChatProps> = ({ identity, onLogout }) => {
             </div>
         
             {/* Room Message Input */}
-            <div className="p-4 border-t border-slate-700">
+            <div className="p-4 pb-safe border-t border-slate-700" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
               <div className="relative">
                 <textarea
                   ref={roomInputRef}
                   value={roomInputValue}
                   onChange={(e) => setRoomInputValue(e.target.value)}
                   onKeyDown={handleRoomInputKeydown}
+                  onFocus={() => {
+                    // 移动端优化：输入框获得焦点时滚动到可视区域
+                    setTimeout(() => {
+                      roomInputRef.current?.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                      });
+                    }, 300);
+                  }}
                   placeholder="Type a message in the room..."
                   className="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 pr-24 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                   rows={1}

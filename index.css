@@ -1,3 +1,23 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Mobile browser safe area support */
+@supports (padding: max(0px)) {
+  .pb-safe {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* Mobile viewport optimization */
+@media screen and (max-width: 768px) {
+  /* Prevent zoom on input focus */
+  input, textarea, select {
+    font-size: 16px;
+  }
+  
+  /* Ensure input areas are not covered by mobile browser UI */
+  .mobile-input-container {
+    margin-bottom: env(safe-area-inset-bottom, 20px);
+  }
+}
