@@ -31,6 +31,7 @@ export const useIndependentFriendsStatus = (currentPeerId: string) => {
   const statusPeerRef = useRef<Peer | null>(null);
   const statusCheckInterval = useRef<NodeJS.Timeout | null>(null);
   const pendingChecks = useRef<Set<string>>(new Set());
+  const initializingRef = useRef(false);
 
   const getFriendsKey = useCallback(() => `meshchat_friends_${currentPeerId}`, [currentPeerId]);
 
@@ -50,10 +51,20 @@ export const useIndependentFriendsStatus = (currentPeerId: string) => {
 
   // Initialize independent peer for status checking
   const initializeStatusPeer = useCallback(async () => {
-    if (statusPeerRef.current) return;
+    if (initializingRef.current) {
+      console.log('🔍 Status peer initialization already in progress');
+      return;
+    }
+
+    if (statusPeerRef.current && !statusPeerRef.current.destroyed) {
+      console.log('🔍 Status peer already exists, reusing connection');
+      return;
+    }
+
+    initializingRef.current = true;
 
     try {
-      const statusPeerId = `status_${currentPeerId}_${Date.now()}`;
+      const statusPeerId = `status_${currentPeerId}_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
       const peerConfig = await PeerServerManager.getOptimalPeerConfig();
       
       console.log('🔍 Initializing independent status peer:', statusPeerId);
@@ -63,24 +74,31 @@ export const useIndependentFriendsStatus = (currentPeerId: string) => {
       statusPeer.on('open', () => {
         console.log('✅ Status peer connected:', statusPeerId);
         statusPeerRef.current = statusPeer;
+        initializingRef.current = false;
       });
 
       statusPeer.on('error', (error) => {
         console.log('⚠️ Status peer error (isolated):', error.type);
+        initializingRef.current = false;
+        if (statusPeerRef.current === statusPeer) {
+          statusPeerRef.current = null;
+        }
       });
 
       statusPeer.on('disconnected', () => {
         console.log('🔌 Status peer disconnected, will retry...');
-        setTimeout(() => {
-          if (statusPeerRef.current === statusPeer) {
-            statusPeerRef.current = null;
+        initializingRef.current = false;
+        if (statusPeerRef.current === statusPeer) {
+          statusPeerRef.current = null;
+          setTimeout(() => {
             initializeStatusPeer();
-          }
-        }, 10000);
+          }, 10000);
+        }
       });
 
     } catch (error) {
       console.log('Failed to initialize status peer:', error);
+      initializingRef.current = false;
     }
   }, [currentPeerId]);
 
@@ -163,13 +181,25 @@ export const useIndependentFriendsStatus = (currentPeerId: string) => {
     initializeStatusPeer();
     
     return () => {
+      console.log('🧹 Cleaning up status peer resources');
+      initializingRef.current = false;
+      
       if (statusCheckInterval.current) {
         clearInterval(statusCheckInterval.current);
+        statusCheckInterval.current = null;
       }
-      if (statusPeerRef.current) {
-        statusPeerRef.current.destroy();
-        statusPeerRef.current = null;
+      
+      if (statusPeerRef.current && !statusPeerRef.current.destroyed) {
+        try {
+          statusPeerRef.current.destroy();
+        } catch (error) {
+          console.warn('Error destroying status peer:', error);
+        } finally {
+          statusPeerRef.current = null;
+        }
       }
+      
+      pendingChecks.current.clear();
     };
   }, [initializeStatusPeer]);
 

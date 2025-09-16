@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useIndependentFriendsStatus } from '../hooks/useIndependentFriendsStatus';
 import { QRCodeModal } from './QRCodeModal';
 import { Friend, Identity } from '../types';
 import { InputSanitizer } from '../utils/sanitizer';
@@ -7,6 +6,8 @@ import { InputSanitizer } from '../utils/sanitizer';
 interface FriendsListProps {
   currentIdentity: Identity;
   peerInstance: any;
+  friends: Friend[];
+  setFriends: React.Dispatch<React.SetStateAction<Friend[]>>;
   onStartAudioCall: (peerId: string) => void;
   onStartVideoCall: (peerId: string) => void;
   onStartChat?: (peerId: string, username: string) => void;
@@ -15,6 +16,8 @@ interface FriendsListProps {
 export const FriendsList: React.FC<FriendsListProps> = ({ 
   currentIdentity, 
   peerInstance,
+  friends,
+  setFriends,
   onStartAudioCall,
   onStartVideoCall,
   onStartChat
@@ -27,9 +30,7 @@ export const FriendsList: React.FC<FriendsListProps> = ({
   const [qrMode, setQrMode] = useState<'generate' | 'scan'>('generate');
   const [currentTime, setCurrentTime] = useState(Date.now());
 
-  const { friends, setFriends } = useIndependentFriendsStatus(
-    currentIdentity.peerId
-  );
+
 
 
 

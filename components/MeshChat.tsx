@@ -69,7 +69,7 @@ export const MeshChat: React.FC<MeshChatProps> = ({ identity, onLogout }) => {
     leaveRoom
   } = useRoomSystem(identity.username, identity.peerId, peerInstance);
 
-  const { friends, onlineFriendsCount, isCheckingFriends, refreshFriendsStatus } = useIndependentFriendsStatus(identity.peerId);
+  const { friends, setFriends, onlineFriendsCount, isCheckingFriends, refreshFriendsStatus } = useIndependentFriendsStatus(identity.peerId);
 
   // 文件传输功能
   const {
@@ -380,6 +380,8 @@ export const MeshChat: React.FC<MeshChatProps> = ({ identity, onLogout }) => {
             <FriendsList 
               currentIdentity={identity}
               peerInstance={peerInstance}
+              friends={friends}
+              setFriends={setFriends}
               onStartAudioCall={(peerId) => handleStartCallWithFriend(peerId, false)}
               onStartVideoCall={(peerId) => handleStartCallWithFriend(peerId, true)}
               onStartChat={(peerId, username) => {

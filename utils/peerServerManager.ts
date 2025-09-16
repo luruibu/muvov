@@ -1,4 +1,6 @@
 // PeerJS Server Manager - Handles server selection and health checks
+import { SettingsManager } from './settings';
+
 export interface PeerServerConfig {
   id: string;
   name: string;
@@ -27,8 +29,6 @@ export class PeerServerManager {
     if (this.initialized) return;
 
     try {
-      // Dynamically import SettingsManager
-      const { SettingsManager } = await import('./settings');
       const settings = SettingsManager.loadSettings();
       
       console.log('📋 Loading servers from system settings...');
@@ -261,7 +261,6 @@ export class PeerServerManager {
   // Generate PeerJS configuration
   static async getOptimalPeerConfig(): Promise<any> {
     // Use SettingsManager configuration directly to ensure user settings take effect
-    const { SettingsManager } = await import('./settings');
     const userConfig = SettingsManager.getPeerJSConfig();
     
     console.log('🎯 Using user-configured PeerJS settings:', userConfig);

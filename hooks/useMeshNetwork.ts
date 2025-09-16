@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import Peer from 'peerjs';
 import { SettingsManager } from '../utils/settings';
-
+import { MobileCompatibility } from '../utils/mobileCompatibility';
 import { PeerServerManager } from '../utils/peerServerManager';
 import { PeerConnectionManager } from '../utils/peerConnectionManager';
 
@@ -128,7 +128,6 @@ export const useMeshNetwork = (localUsername: string, customPeerId?: string) => 
       const peerId = customPeerId || `user_${Math.random().toString(36).substr(2, 9)}`;
       
       // Get optimal server configuration with mobile optimization
-      const { MobileCompatibility } = await import('../utils/mobileCompatibility');
       let peerConfig = await PeerServerManager.getOptimalPeerConfig();
       
       // Apply mobile optimizations if on mobile device
