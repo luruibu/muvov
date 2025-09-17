@@ -1,0 +1,58 @@
+{$DOMAIN} {
+    # 主应用服务
+    handle / {
+        root * /srv/muvov
+        file_server
+        try_files {path} /index.html
+    }
+
+    # PeerJS 信令服务器代理 - 支持 WebSocket 和 SSL
+    handle /peerjs/* {
+        reverse_proxy peerjs-server:9000 {
+            # WebSocket 支持
+            header_up Upgrade {>Upgrade}
+            header_up Connection {>Connection}
+            # 保持原始 Host 头
+            header_up Host {host}
+            # 传递真实 IP
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+            # SSL 相关头
+            header_up X-Forwarded-Ssl on
+        }
+    }
+
+    # API 路由（如果需要）
+    handle /api/* {
+        reverse_proxy peerjs-server:9000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # 启用 HTTPS 和 HTTP/2
+    encode gzip
+
+    # 安全头
+    header {
+        # 启用 HSTS
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        # 防止点击劫持
+        X-Frame-Options "DENY"
+        # 防止 MIME 类型嗅探
+        X-Content-Type-Options "nosniff"
+        # XSS 保护
+        X-XSS-Protection "1; mode=block"
+        # 推荐安全策略
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    # 日志
+    log {
+        output file /var/log/caddy/access.log
+        format json
+    }
+}

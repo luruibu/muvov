@@ -1,7 +1,7 @@
 {
-  "name": "p2p-webrtc-secure-chat",
+  "name": "muvov",
   "version": "1.0.0",
-  "description": "A peer-to-peer encrypted chat application with WebRTC support for secure messaging and audio/video calls",
+  "description": "A peer-to-peer encrypted chat application built with WebRTC, supporting message caching, offline sync, and audio/video calls",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,26 +10,35 @@
     "lint": "tsc --noEmit"
   },
   "keywords": [
+    "muvov",
     "webrtc",
     "p2p",
     "chat",
     "secure",
     "encryption",
+    "end-to-end",
     "video-call",
     "audio-call",
+    "offline-sync",
+    "message-caching",
+    "file-sharing",
+    "qr-code",
+    "browser-only",
+    "decentralized",
+    "privacy",
     "react",
     "typescript"
   ],
-  "author": "P2P WebRTC Secure Chat Contributors",
+  "author": "luruibu",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/p2p-webrtc-secure-chat.git"
+    "url": "https://github.com/luruibu/muvov.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/p2p-webrtc-secure-chat/issues"
+    "url": "https://github.com/luruibu/muvov/issues"
   },
-  "homepage": "https://github.com/yourusername/p2p-webrtc-secure-chat#readme",
+  "homepage": "https://github.com/luruibu/muvov#readme",
   "dependencies": {
     "@types/peerjs": "^0.0.30",
     "peerjs": "^1.5.5",

@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  # Caddy 反向代理和自动 HTTPS
+  caddy:
+    image: caddy:2-alpine
+    container_name: muvov-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+      - ../dist:/srv/muvov
+    environment:
+      - DOMAIN=${DOMAIN}
+    depends_on:
+      - peerjs-server
+    networks:
+      - muvov-network
+
+  # PeerJS 信令服务器
+  peerjs-server:
+    image: peerjs/peerjs-server:latest
+    container_name: muvov-peerjs
+    restart: unless-stopped
+    environment:
+      - PORT=9000
+      - EXPIRE_TIMEOUT=5000
+      - ALIVE_TIMEOUT=60000
+      - KEY=muvov
+      - PATH=/peerjs
+    expose:
+      - "9000"
+    networks:
+      - muvov-network
+
+  # CoTURN STUN/TURN 服务器
+  coturn:
+    image: coturn/coturn:latest
+    container_name: muvov-coturn
+    restart: unless-stopped
+    ports:
+      - "3478:3478"
+      - "3478:3478/udp"
+      - "5349:5349"
+      - "5349:5349/udp"
+      - "49152-65535:49152-65535/udp"
+    volumes:
+      - ./turnserver.conf:/etc/coturn/turnserver.conf
+      - caddy_data:/etc/ssl/caddy:ro
+    environment:
+      - DOMAIN=${DOMAIN}
+    depends_on:
+      - caddy
+    networks:
+      - muvov-network
+
+  # MUVOV 应用构建器（一次性运行）
+  muvov-builder:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: muvov-builder
+    volumes:
+      - ../dist:/app/dist
+    environment:
+      - DOMAIN=${DOMAIN}
+    command: npm run build
+
+volumes:
+  caddy_data:
+  caddy_config:
+
+networks:
+  muvov-network:
+    driver: bridge
+    enable_ipv6: true
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16
+        - subnet: 2001:db8::/64
