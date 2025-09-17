@@ -116,19 +116,31 @@ chmod +x rollback-domain.sh
 
 ## 🌐 IPv6 支持
 
-本部署方案完整支持 IPv6：
-- Docker 网络启用 IPv6
-- CoTURN 支持 IPv4/IPv6 双栈
-- Caddy 自动处理 IPv6 SSL 证书
+提供两种网络模式：
 
-### IPv6 配置检查
+### 模式选择
+- **IPv4 + IPv6 双栈**: 完整 IPv6 支持，适合全球化部署
+- **仅 IPv4 模式**: 简化配置，IPv6 通过主机端口映射
+
+### 配置检查和切换
 ```bash
+# 分析 IPv6 需求
+./analyze-ipv6-need.sh
+
+# 切换网络模式
+./switch-ipv6-mode.sh
+
 # 检查 IPv6 支持
 ./check-ipv6.sh your-domain.com
 
 # 测试连接性
 ./test-connectivity.sh your-domain.com
 ```
+
+### 何时需要容器 IPv6？
+- ✅ **需要**: 全球化部署、大量用户、性能要求高
+- ⚠️ **可选**: 中等规模部署、有技术团队维护
+- ❌ **不需要**: 个人使用、小团队、简单部署
 
 ## 📚 详细文档
 

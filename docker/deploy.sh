@@ -44,14 +44,51 @@ TURN_MIN_PORT=49152
 TURN_MAX_PORT=65535
 EOF
 
-# 检查 IPv6 支持
-echo "🔍 检查 IPv6 支持..."
-if [ -f ./check-ipv6.sh ]; then
-    chmod +x ./check-ipv6.sh
-    ./check-ipv6.sh $DOMAIN
-else
-    echo "⚠️  IPv6 检查脚本未找到"
-fi
+# IPv6 模式选择
+echo "🌐 IPv6 配置选择..."
+echo "请选择网络模式："
+echo "1) IPv4 + IPv6 双栈 (推荐用于全球化部署)"
+echo "2) 仅 IPv4 (推荐用于简单部署)"
+echo "3) 让我分析需求"
+echo ""
+read -p "请选择 (1-3, 默认为2): " IPV6_CHOICE
+
+case ${IPV6_CHOICE:-2} in
+    1)
+        COMPOSE_FILE="docker-compose.yml"
+        echo "   ✅ 选择 IPv4 + IPv6 双栈模式"
+        ;;
+    2)
+        COMPOSE_FILE="docker-compose-ipv4-only.yml"
+        echo "   ✅ 选择仅 IPv4 模式"
+        ;;
+    3)
+        echo "🔍 运行需求分析..."
+        if [ -f ./analyze-ipv6-need.sh ]; then
+            chmod +x ./analyze-ipv6-need.sh
+            ./analyze-ipv6-need.sh
+            echo ""
+            read -p "分析完成，请选择模式 (1=双栈, 2=IPv4): " IPV6_CHOICE
+            case ${IPV6_CHOICE:-2} in
+                1)
+                    COMPOSE_FILE="docker-compose.yml"
+                    echo "   ✅ 选择 IPv4 + IPv6 双栈模式"
+                    ;;
+                *)
+                    COMPOSE_FILE="docker-compose-ipv4-only.yml"
+                    echo "   ✅ 选择仅 IPv4 模式"
+                    ;;
+            esac
+        else
+            echo "⚠️  分析脚本未找到，使用默认 IPv4 模式"
+            COMPOSE_FILE="docker-compose-ipv4-only.yml"
+        fi
+        ;;
+    *)
+        COMPOSE_FILE="docker-compose-ipv4-only.yml"
+        echo "   ✅ 使用默认仅 IPv4 模式"
+        ;;
+esac
 
 # 检查端口占用
 echo "🔍 检查端口占用..."
@@ -70,7 +107,7 @@ cd docker
 
 # 启动服务
 echo "🚀 启动服务..."
-docker-compose up -d
+docker-compose -f $COMPOSE_FILE up -d
 
 # 等待服务启动
 echo "⏳ 等待服务启动..."
@@ -78,7 +115,7 @@ sleep 10
 
 # 检查服务状态
 echo "📊 检查服务状态..."
-docker-compose ps
+docker-compose -f $COMPOSE_FILE ps
 
 # 显示访问信息
 echo ""
@@ -90,9 +127,10 @@ echo "🌍 STUN 服务器: stun:$DOMAIN:3478"
 echo "🔒 TURN 服务器: turn:$DOMAIN:3478"
 echo ""
 echo "📋 管理命令:"
-echo "  查看日志: docker-compose logs -f"
-echo "  停止服务: docker-compose down"
-echo "  重启服务: docker-compose restart"
+echo "  查看日志: docker-compose -f $COMPOSE_FILE logs -f"
+echo "  停止服务: docker-compose -f $COMPOSE_FILE down"
+echo "  重启服务: docker-compose -f $COMPOSE_FILE restart"
+echo "  切换模式: ./switch-ipv6-mode.sh"
 echo ""
 echo "⚠️  注意事项:"
 echo "  1. 确保域名 DNS 已正确解析到此服务器"
