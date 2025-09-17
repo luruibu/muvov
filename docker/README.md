@@ -16,6 +16,15 @@ docker/
 ├── .env.example               # 环境变量模板
 ├── deploy.sh                  # Linux/Mac 部署脚本
 ├── deploy.bat                 # Windows 部署脚本
+├── change-domain.sh           # 域名更改脚本
+├── change-domain.bat          # Windows 域名更改脚本
+├── rollback-domain.sh         # 域名回滚脚本
+├── switch-ipv6-mode.sh        # IPv6 模式切换脚本
+├── check-prerequisites.sh     # 前置条件检查
+├── check-ipv6.sh             # IPv6 支持检查
+├── test-connectivity.sh       # 连通性测试
+├── analyze-ipv6-need.sh      # IPv6 需求分析
+├── fix-build-issues.sh       # 构建问题修复
 └── README.md                  # 本文件
 ```
 
@@ -142,6 +151,13 @@ chmod +x rollback-domain.sh
 - ⚠️ **可选**: 中等规模部署、有技术团队维护
 - ❌ **不需要**: 个人使用、小团队、简单部署
 
+## �  网络测试
+
+所有网络连通性测试统一使用 `bing.com`：
+- 支持 IPv4 和 IPv6
+- 全球可用性好
+- 响应稳定可靠
+
 ## 📚 详细文档
 
 - **[域名管理指南](DOMAIN-MANAGEMENT.md)** - 完整的域名更改和管理文档
@@ -152,5 +168,42 @@ chmod +x rollback-domain.sh
 - **WebSocket**: 完整支持 WSS (WebSocket Secure)
 - **TURN/STUN**: 支持 DTLS 和 TLS 加密
 - **自动证书**: Let's Encrypt 自动申请和续期
+
+## 🐛 故障排除
+
+### 常见问题
+
+#### 1. "vite: not found" 错误
+```bash
+# 问题：构建时找不到 vite 命令
+# 解决：运行修复脚本
+./fix-build-issues.sh
+
+# 或手动修复
+cd ..
+npm install
+npm run build
+cd docker
+```
+
+#### 2. 部署前检查
+```bash
+# 运行前置条件检查
+./check-prerequisites.sh
+```
+
+#### 3. 权限问题
+```bash
+# 给脚本添加执行权限
+chmod +x *.sh
+```
+
+#### 4. Docker 权限问题
+```bash
+# 将用户添加到 docker 组 (Linux)
+sudo usermod -aG docker $USER
+# 重新登录或运行
+newgrp docker
+```
 
 详细部署文档请参考项目根目录的 `README-DOCKER.md`。

@@ -7,15 +7,27 @@ set -e
 echo "🚀 MUVOV 部署脚本"
 echo "=================="
 
-# 检查 Docker 和 Docker Compose
-if ! command -v docker &> /dev/null; then
-    echo "❌ Docker 未安装，请先安装 Docker"
-    exit 1
-fi
+# 运行前置条件检查
+echo "🔍 运行前置条件检查..."
+if [ -f ./check-prerequisites.sh ]; then
+    chmod +x ./check-prerequisites.sh
+    if ! ./check-prerequisites.sh; then
+        echo "❌ 前置条件检查失败，请解决问题后重试"
+        exit 1
+    fi
+else
+    echo "⚠️  前置条件检查脚本未找到，继续部署..."
+    
+    # 基本检查
+    if ! command -v docker &> /dev/null; then
+        echo "❌ Docker 未安装，请先安装 Docker"
+        exit 1
+    fi
 
-if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
-    echo "❌ Docker Compose 未安装，请先安装 Docker Compose"
-    exit 1
+    if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
+        echo "❌ Docker Compose 未安装，请先安装 Docker Compose"
+        exit 1
+    fi
 fi
 
 # 获取域名
@@ -102,7 +114,27 @@ done
 # 构建 MUVOV 应用
 echo "🔨 构建 MUVOV 应用..."
 cd ..
+
+# 检查是否已安装依赖
+if [ ! -d "node_modules" ]; then
+    echo "   📦 安装依赖..."
+    npm install
+else
+    echo "   ✅ 依赖已存在"
+fi
+
+# 构建应用
+echo "   🏗️  构建应用..."
 npm run build
+
+# 检查构建结果
+if [ ! -d "dist" ]; then
+    echo "   ❌ 构建失败，未找到 dist 目录"
+    exit 1
+else
+    echo "   ✅ 构建成功"
+fi
+
 cd docker
 
 # 启动服务

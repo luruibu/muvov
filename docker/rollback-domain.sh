@@ -78,7 +78,27 @@ echo "   ✅ 配置已恢复"
 # 4. 重新构建应用
 echo "4. 重新构建应用..."
 cd ..
+
+# 检查是否已安装依赖
+if [ ! -d "node_modules" ]; then
+    echo "   📦 安装依赖..."
+    npm install
+else
+    echo "   ✅ 依赖已存在"
+fi
+
+# 构建应用
+echo "   🏗️  构建应用..."
 npm run build
+
+# 检查构建结果
+if [ ! -d "dist" ]; then
+    echo "   ❌ 构建失败，未找到 dist 目录"
+    exit 1
+else
+    echo "   ✅ 构建成功"
+fi
+
 cd docker
 
 # 5. 启动服务

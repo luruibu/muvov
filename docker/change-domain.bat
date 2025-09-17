@@ -104,7 +104,28 @@ if /i "%CLEAR_CERTS%"=="y" (
 REM 5. 重新构建应用
 echo 5. 重新构建应用...
 cd ..
+
+REM 检查是否已安装依赖
+if not exist "node_modules" (
+    echo    📦 安装依赖...
+    call npm install
+) else (
+    echo    ✅ 依赖已存在
+)
+
+REM 构建应用
+echo    🏗️  构建应用...
 call npm run build
+
+REM 检查构建结果
+if not exist "dist" (
+    echo    ❌ 构建失败，未找到 dist 目录
+    pause
+    exit /b 1
+) else (
+    echo    ✅ 构建成功
+)
+
 cd docker
 
 REM 6. 启动服务

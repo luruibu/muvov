@@ -27,7 +27,7 @@ fi
 # 检查 IPv6 连通性
 echo ""
 echo "2. IPv6 连通性测试:"
-if ping6 -c 1 -W 3 google.com >/dev/null 2>&1; then
+if ping6 -c 1 -W 3 bing.com >/dev/null 2>&1; then
     echo "   ✅ IPv6 外网连通正常"
 else
     echo "   ❌ IPv6 外网连通失败"
