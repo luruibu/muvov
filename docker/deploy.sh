@@ -72,7 +72,7 @@ echo "   ✅ 配置为 IPv4 模式（适用于大多数部署场景）"
 echo "🔍 检查端口占用..."
 PORTS=(80 443 3478 5349)
 for port in "${PORTS[@]}"; do
-    if netstat -tuln | grep -q ":$port "; then
+    if ss -tuln | grep -q ":$port "; then
         echo "⚠️  警告: 端口 $port 已被占用"
     fi
 done
@@ -105,8 +105,8 @@ if command -v npm &> /dev/null && command -v node &> /dev/null; then
         ./inject-server-config.sh "$DOMAIN"
         cd ..
         echo "   ✅ 服务器地址已配置到应用中"
-    elif [ -f "docker/configure-servers.js" ]; then
-        node docker/configure-servers.js "$DOMAIN"
+    elif [ -f "docker/configure-servers.cjs" ]; then
+        node docker/configure-servers.cjs "$DOMAIN"
         echo "   ✅ 服务器地址已配置到应用中"
     else
         echo "   ⚠️  配置脚本未找到，跳过配置"
@@ -146,8 +146,8 @@ if [ "$LOCAL_BUILD_SUCCESS" = false ]; then
         chmod +x inject-server-config.sh
         ./inject-server-config.sh "$DOMAIN"
         echo "   ✅ 服务器地址已配置到应用中"
-    elif [ -f "configure-servers.js" ]; then
-        node configure-servers.js "$DOMAIN"
+    elif [ -f "configure-servers.cjs" ]; then
+        node configure-servers.cjs "$DOMAIN"
         echo "   ✅ 服务器地址已配置到应用中"
     else
         echo "   ⚠️  配置脚本未找到，跳过配置"

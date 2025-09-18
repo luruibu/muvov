@@ -159,7 +159,7 @@ if (require.main === module) {
   
   if (!domain) {
     console.error('❌ 请提供域名参数');
-    console.log('用法: node configure-servers.js <domain>');
+    console.log('用法: node configure-servers.cjs <domain>');
     process.exit(1);
   }
   
