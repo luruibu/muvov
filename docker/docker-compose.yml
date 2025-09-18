@@ -21,11 +21,10 @@ services:
 
   # PeerJS 信令服务器
   peerjs-server:
-    build:
-      context: .
-      dockerfile: Dockerfile.peerjs
+    image: node:18-alpine
     container_name: muvov-peerjs
     restart: unless-stopped
+    command: sh -c "npm install -g peerjs && exec peerjs --port 9000 --key muvov --path /peerjs"
     environment:
       - PORT=9000
       - KEY=muvov

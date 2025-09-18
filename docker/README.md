@@ -10,7 +10,6 @@ docker/
 ├── docker-compose.prod.yml     # 生产环境配置
 ├── Dockerfile                  # MUVOV 应用构建配置
 ├── Dockerfile.build            # 专用构建配置
-├── Dockerfile.peerjs           # PeerJS 服务器配置
 ├── Caddyfile                   # Caddy 反向代理配置
 ├── turnserver.conf             # CoTURN STUN/TURN 服务器配置
 ├── nginx.conf                  # Nginx 配置
@@ -188,12 +187,15 @@ brew install docker-compose          # macOS
 # 脚本会自动检测并使用正确的命令
 ```
 
-#### 1.5. "node: executable file not found" 错误
+#### 1.5. "node: executable file not found" 或 "docker-entrypoint.sh" 错误
 ```bash
-# 问题：PeerJS 容器中找不到 node 命令
-# 解决：已修复，现在使用自定义 PeerJS 镜像
-# 如果仍有问题，重新构建镜像：
-docker-compose build peerjs-server
+# 问题：PeerJS 容器启动失败
+# 解决：已修复，现在直接使用 node:18-alpine 镜像
+# PeerJS 会在容器启动时自动安装
+
+# 如果仍有问题，清理容器重新启动：
+docker-compose down
+docker-compose up -d
 ```
 
 #### 2. "npm: not found" 或 "vite: not found" 错误
