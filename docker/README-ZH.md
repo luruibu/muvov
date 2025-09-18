@@ -69,11 +69,12 @@ newgrp docker
 
 ### 2. 配置域名
 
-确保您的域名指向服务器的公网 IP:
+确保您的域名指向服务器的公网 IP (V4 or V6 or V4&V6):
 ```bash
 # 检查 DNS 解析
 nslookup your-domain.com
 dig your-domain.com A
+dig your-domain.com AAAA
 ```
 
 ### 3. 下载并部署 MUVOV

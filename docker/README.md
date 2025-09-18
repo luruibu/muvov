@@ -69,11 +69,12 @@ newgrp docker
 
 ### 2. Configure Domain Name
 
-Ensure your domain points to your server's public IP:
+Ensure your domain points to your server's public IP (IP V4 or V6 or V4&V6):
 ```bash
 # Check DNS resolution
 nslookup your-domain.com
 dig your-domain.com A
+dig your-domain.com AAAA
 ```
 
 ### 3. Download and Deploy MUVOV
