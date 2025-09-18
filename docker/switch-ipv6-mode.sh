@@ -7,6 +7,24 @@ set -e
 echo "🔄 IPv6 模式切换工具"
 echo "==================="
 
+# 检测 Docker Compose 命令
+detect_docker_compose() {
+    if command -v docker-compose &> /dev/null; then
+        echo "docker-compose"
+    elif docker compose version &> /dev/null 2>&1; then
+        echo "docker compose"
+    else
+        echo ""
+    fi
+}
+
+DOCKER_COMPOSE_CMD=$(detect_docker_compose)
+
+if [ -z "$DOCKER_COMPOSE_CMD" ]; then
+    echo "❌ Docker Compose 未找到"
+    exit 1
+fi
+
 # 检查当前模式
 CURRENT_MODE="unknown"
 if docker network inspect docker_muvov-network 2>/dev/null | grep -q '"EnableIPv6": true'; then
@@ -83,7 +101,7 @@ echo "🔧 开始切换..."
 
 # 1. 停止服务
 echo "1. 停止当前服务..."
-docker-compose down
+$DOCKER_COMPOSE_CMD down
 
 # 2. 备份当前配置
 echo "2. 备份网络配置..."
@@ -98,7 +116,7 @@ docker network rm docker_muvov-network 2>/dev/null || echo "   网络不存在�
 
 # 4. 启动新配置
 echo "4. 启动新配置..."
-docker-compose -f $COMPOSE_FILE up -d
+$DOCKER_COMPOSE_CMD -f $COMPOSE_FILE up -d
 
 # 5. 等待服务启动
 echo "5. 等待服务启动..."
@@ -122,7 +140,7 @@ fi
 
 # 7. 检查服务状态
 echo "7. 检查服务状态..."
-docker-compose -f $COMPOSE_FILE ps
+$DOCKER_COMPOSE_CMD -f $COMPOSE_FILE ps
 
 # 8. 网络测试
 echo "8. 网络连通性测试..."
@@ -172,8 +190,8 @@ fi
 
 echo ""
 echo "🔧 管理命令："
-echo "   查看日志: docker-compose -f $COMPOSE_FILE logs -f"
-echo "   重启服务: docker-compose -f $COMPOSE_FILE restart"
-echo "   停止服务: docker-compose -f $COMPOSE_FILE down"
+echo "   查看日志: $DOCKER_COMPOSE_CMD -f $COMPOSE_FILE logs -f"
+echo "   重启服务: $DOCKER_COMPOSE_CMD -f $COMPOSE_FILE restart"
+echo "   停止服务: $DOCKER_COMPOSE_CMD -f $COMPOSE_FILE down"
 echo ""
 echo "✨ 切换完成！"

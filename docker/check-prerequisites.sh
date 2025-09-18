@@ -65,12 +65,13 @@ echo "4. 检查 Docker Compose..."
 if command -v docker-compose &> /dev/null; then
     COMPOSE_VERSION=$(docker-compose --version)
     echo "   ✅ Docker Compose 已安装: $COMPOSE_VERSION"
-elif docker compose version &> /dev/null; then
+elif docker compose version &> /dev/null 2>&1; then
     COMPOSE_VERSION=$(docker compose version)
     echo "   ✅ Docker Compose (内置) 已安装: $COMPOSE_VERSION"
 else
     echo "   ❌ Docker Compose 未安装"
-    echo "   请安装 Docker Compose"
+    echo "   请安装 Docker Compose 或使用较新版本的 Docker"
+    echo "   新版 Docker 内置了 'docker compose' 命令"
     ERRORS=$((ERRORS + 1))
 fi
 

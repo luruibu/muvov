@@ -7,6 +7,19 @@ set -e
 echo "🚀 MUVOV 部署脚本"
 echo "=================="
 
+# 检测 Docker Compose 命令
+detect_docker_compose() {
+    if command -v docker-compose &> /dev/null; then
+        echo "docker-compose"
+    elif docker compose version &> /dev/null 2>&1; then
+        echo "docker compose"
+    else
+        echo ""
+    fi
+}
+
+DOCKER_COMPOSE_CMD=$(detect_docker_compose)
+
 # 运行前置条件检查
 echo "🔍 运行前置条件检查..."
 if [ -f ./check-prerequisites.sh ]; then
@@ -24,9 +37,11 @@ else
         exit 1
     fi
 
-    if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
+    if [ -z "$DOCKER_COMPOSE_CMD" ]; then
         echo "❌ Docker Compose 未安装，请先安装 Docker Compose"
         exit 1
+    else
+        echo "✅ 检测到 Docker Compose: $DOCKER_COMPOSE_CMD"
     fi
 fi
 
@@ -139,7 +154,7 @@ cd docker
 
 # 启动服务
 echo "🚀 启动服务..."
-docker-compose -f $COMPOSE_FILE up -d
+$DOCKER_COMPOSE_CMD -f $COMPOSE_FILE up -d
 
 # 等待服务启动
 echo "⏳ 等待服务启动..."
@@ -147,7 +162,7 @@ sleep 10
 
 # 检查服务状态
 echo "📊 检查服务状态..."
-docker-compose -f $COMPOSE_FILE ps
+$DOCKER_COMPOSE_CMD -f $COMPOSE_FILE ps
 
 # 显示访问信息
 echo ""
@@ -159,9 +174,9 @@ echo "🌍 STUN 服务器: stun:$DOMAIN:3478"
 echo "🔒 TURN 服务器: turn:$DOMAIN:3478"
 echo ""
 echo "📋 管理命令:"
-echo "  查看日志: docker-compose -f $COMPOSE_FILE logs -f"
-echo "  停止服务: docker-compose -f $COMPOSE_FILE down"
-echo "  重启服务: docker-compose -f $COMPOSE_FILE restart"
+echo "  查看日志: $DOCKER_COMPOSE_CMD -f $COMPOSE_FILE logs -f"
+echo "  停止服务: $DOCKER_COMPOSE_CMD -f $COMPOSE_FILE down"
+echo "  重启服务: $DOCKER_COMPOSE_CMD -f $COMPOSE_FILE restart"
 echo "  切换模式: ./switch-ipv6-mode.sh"
 echo ""
 echo "⚠️  注意事项:"

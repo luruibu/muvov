@@ -7,6 +7,24 @@ set -e
 echo "🔄 MUVOV 域名更改工具"
 echo "===================="
 
+# 检测 Docker Compose 命令
+detect_docker_compose() {
+    if command -v docker-compose &> /dev/null; then
+        echo "docker-compose"
+    elif docker compose version &> /dev/null 2>&1; then
+        echo "docker compose"
+    else
+        echo ""
+    fi
+}
+
+DOCKER_COMPOSE_CMD=$(detect_docker_compose)
+
+if [ -z "$DOCKER_COMPOSE_CMD" ]; then
+    echo "❌ Docker Compose 未找到"
+    exit 1
+fi
+
 # 获取当前域名
 CURRENT_DOMAIN=""
 if [ -f .env ]; then
@@ -51,7 +69,7 @@ echo "🔧 开始更改域名..."
 
 # 1. 停止服务
 echo "1. 停止当前服务..."
-docker-compose down
+$DOCKER_COMPOSE_CMD down
 
 # 2. 备份当前配置
 echo "2. 备份当前配置..."
@@ -112,7 +130,7 @@ cd docker
 
 # 6. 启动服务
 echo "6. 启动服务..."
-docker-compose up -d
+$DOCKER_COMPOSE_CMD up -d
 
 # 7. 等待服务启动
 echo "7. 等待服务启动和证书申请..."
@@ -120,8 +138,8 @@ echo "   这可能需要1-3分钟，请耐心等待..."
 
 # 监控证书申请进度
 for i in {1..60}; do
-    if docker-compose logs caddy 2>/dev/null | grep -q "certificate obtained successfully" || \
-       docker-compose logs caddy 2>/dev/null | grep -q "serving initial HTTP challenge"; then
+    if $DOCKER_COMPOSE_CMD logs caddy 2>/dev/null | grep -q "certificate obtained successfully" || \
+       $DOCKER_COMPOSE_CMD logs caddy 2>/dev/null | grep -q "serving initial HTTP challenge"; then
         echo "   ✅ 证书申请进行中..."
         break
     fi
@@ -133,7 +151,7 @@ echo ""
 # 8. 检查服务状态
 echo "8. 检查服务状态..."
 sleep 10
-docker-compose ps
+$DOCKER_COMPOSE_CMD ps
 
 # 9. 测试新域名
 echo "9. 测试新域名连接..."
@@ -171,7 +189,7 @@ echo "2. 更新客户端配置中的服务器地址"
 echo "3. 如有问题，可使用备份恢复: $BACKUP_DIR/"
 echo ""
 echo "🔧 故障排除："
-echo "- 查看日志: docker-compose logs -f"
+echo "- 查看日志: $DOCKER_COMPOSE_CMD logs -f"
 echo "- 测试连接: ./test-connectivity.sh $NEW_DOMAIN"
 echo "- 检查 DNS: nslookup $NEW_DOMAIN"
 echo ""

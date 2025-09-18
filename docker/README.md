@@ -21,6 +21,7 @@ docker/
 ├── rollback-domain.sh         # 域名回滚脚本
 ├── switch-ipv6-mode.sh        # IPv6 模式切换脚本
 ├── check-prerequisites.sh     # 前置条件检查
+├── check-docker-compose.sh   # Docker Compose 兼容性检查
 ├── check-ipv6.sh             # IPv6 支持检查
 ├── test-connectivity.sh       # 连通性测试
 ├── analyze-ipv6-need.sh      # IPv6 需求分析
@@ -173,7 +174,19 @@ chmod +x rollback-domain.sh
 
 ### 常见问题
 
-#### 1. "vite: not found" 错误
+#### 1. "docker-compose: command not found" 错误
+```bash
+# 问题：找不到 docker-compose 命令
+# 解决：运行兼容性检查
+./check-docker-compose.sh
+
+# 或手动安装
+sudo apt-get install docker-compose  # Ubuntu/Debian
+brew install docker-compose          # macOS
+# 脚本会自动检测并使用正确的命令
+```
+
+#### 2. "vite: not found" 错误
 ```bash
 # 问题：构建时找不到 vite 命令
 # 解决：运行修复脚本
@@ -186,19 +199,19 @@ npm run build
 cd docker
 ```
 
-#### 2. 部署前检查
+#### 3. 部署前检查
 ```bash
 # 运行前置条件检查
 ./check-prerequisites.sh
 ```
 
-#### 3. 权限问题
+#### 4. 权限问题
 ```bash
 # 给脚本添加执行权限
 chmod +x *.sh
 ```
 
-#### 4. Docker 权限问题
+#### 5. Docker 权限问题
 ```bash
 # 将用户添加到 docker 组 (Linux)
 sudo usermod -aG docker $USER
