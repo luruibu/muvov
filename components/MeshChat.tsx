@@ -595,7 +595,7 @@ export const MeshChat: React.FC<MeshChatProps> = ({ identity, onLogout }) => {
                 {roomMessages.map(msg => (
                   <div key={msg.id} className={`flex ${msg.isLocal ? 'justify-end' : 'justify-start'}`}>
                     <div className={`px-4 py-2 rounded-lg max-w-xs md:max-w-md lg:max-w-lg ${msg.isLocal ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-200'}`}>
-                      <div className="text-sm font-bold text-slate-400">{getCallerName(msg.sender)}</div>
+                      <div className="text-sm font-bold text-slate-400">{msg.sender}</div>
                       {renderMessageContent(msg)}
                       <div className="text-xs text-slate-400 mt-1 text-right">
                         {new Date(msg.timestamp).toLocaleDateString()} {new Date(msg.timestamp).toLocaleTimeString()}

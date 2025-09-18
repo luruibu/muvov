@@ -26,7 +26,7 @@ export const useRoomSystem = (
     const newMessage: RoomMessage = {
       ...message,
       id: generateId(),
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timestamp: Date.now(),
     };
     setRoomMessages(prev => [...prev, newMessage]);
   }, []);

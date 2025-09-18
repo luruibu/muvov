@@ -48,7 +48,7 @@ export interface RoomMessage {
   content: string;
   timestamp: number;
   isLocal: boolean;
-  type: 'text' | 'file';
+  type?: 'text' | 'file';
   transferId?: string;
   fileName?: string;
   fileSize?: number;

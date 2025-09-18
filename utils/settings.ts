@@ -28,7 +28,12 @@ export class SettingsManager {
   
   // Default configuration
   static getDefaultSettings(): SystemSettings {
-    return {
+    // @ts-ignore
+    const deployDomain = typeof process !== 'undefined' && process.env ? process.env.DEPLOY_DOMAIN : '';
+    
+    console.log('🔧 设置管理器 - 检测到部署域名:', deployDomain);
+    
+    const defaultSettings: SystemSettings = {
       peerServers: [
         {
           id: 'default',
@@ -37,7 +42,7 @@ export class SettingsManager {
           port: 443,
           path: '/',
           secure: true,
-          enabled: true
+          enabled: !deployDomain // 如果有部署域名，禁用默认服务器
         }
       ],
       stunServers: [
@@ -45,7 +50,7 @@ export class SettingsManager {
           id: 'cloudflare',
           name: 'Cloudflare STUN',
           url: 'stun:stun.cloudflare.com:3478',
-          enabled: true
+          enabled: !deployDomain // 如果有部署域名，禁用默认STUN
         },
         {
           id: 'google1',
@@ -62,6 +67,41 @@ export class SettingsManager {
       ],
       version: '1.0'
     };
+    
+    // 如果有部署域名，添加部署的服务器
+    if (deployDomain) {
+      console.log('🚀 检测到部署域名，自动配置服务器:', deployDomain);
+      
+      // 添加部署的PeerJS服务器
+      defaultSettings.peerServers.unshift({
+        id: 'deployed_peerjs',
+        name: '部署的PeerJS服务器',
+        host: deployDomain,
+        port: 443,
+        path: '/peerjs',
+        secure: true,
+        key: 'muvov',
+        enabled: true
+      });
+      
+      // 添加部署的STUN服务器
+      defaultSettings.stunServers.unshift(
+        {
+          id: 'deployed_coturn',
+          name: '部署的CoTURN服务器',
+          url: `stun:${deployDomain}:3478`,
+          enabled: true
+        },
+        {
+          id: 'deployed_coturn_tls',
+          name: '部署的CoTURN服务器(TLS)',
+          url: `stuns:${deployDomain}:5349`,
+          enabled: true
+        }
+      );
+    }
+    
+    return defaultSettings;
   }
 
   // Load settings

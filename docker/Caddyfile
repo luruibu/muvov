@@ -1,52 +1,68 @@
 {$DOMAIN} {
-    # 主应用服务
-    handle / {
-        root * /srv/muvov
-        file_server
-        try_files {path} /index.html
-    }
+    # MIME 类型设置
+    @css path *.css
+    @js path *.js *.mjs
+    @json path *.json
+    @static path *.css *.js *.mjs *.json *.woff *.woff2 *.ttf *.eot *.png *.jpg *.jpeg *.gif *.ico *.svg
 
-    # PeerJS 信令服务器代理 - 支持 WebSocket 和 SSL
-    handle /peerjs/* {
+    header @css Content-Type "text/css; charset=utf-8"
+    header @js Content-Type "application/javascript; charset=utf-8"
+    header @json Content-Type "application/json; charset=utf-8"
+    
+    # SVG 文件 MIME 类型
+    @svg path *.svg
+    header @svg Content-Type "image/svg+xml"
+    
+    header @static Cache-Control "public, max-age=31536000"
+
+    # PeerJS 代理 - 支持WebSocket
+    handle /peerjs* {
         reverse_proxy peerjs-server:9000 {
-            # WebSocket 支持
-            header_up Upgrade {>Upgrade}
-            header_up Connection {>Connection}
-            # 保持原始 Host 头
             header_up Host {host}
-            # 传递真实 IP
             header_up X-Real-IP {remote_host}
             header_up X-Forwarded-For {remote_host}
             header_up X-Forwarded-Proto {scheme}
-            # SSL 相关头
-            header_up X-Forwarded-Ssl on
         }
     }
 
-    # API 路由（如果需要）
+    # API 代理
     handle /api/* {
         reverse_proxy peerjs-server:9000 {
             header_up Host {host}
             header_up X-Real-IP {remote_host}
-            header_up X-Forwarded-For {remote_host}
-            header_up X-Forwarded-Proto {scheme}
         }
     }
 
-    # 启用 HTTPS 和 HTTP/2
-    encode gzip
+    # 静态文件优先处理
+    handle /assets/* {
+        root * /srv/muvov
+        file_server
+    }
+    
+    # 根目录静态文件
+    @static_files path *.css *.js *.mjs *.json *.png *.jpg *.jpeg *.gif *.ico *.svg *.woff *.woff2 *.ttf *.eot
+    handle @static_files {
+        root * /srv/muvov
+        file_server
+    }
 
-    # 安全头
+    # SPA 路由 - 只对非静态文件使用 try_files
+    handle / {
+        root * /srv/muvov
+        try_files {path} /index.html
+        file_server
+    }
+
+    # 启用压缩 - 优化配置
+    encode {
+        gzip 6
+        minimum_length 1024
+    }
     header {
-        # 启用 HSTS
         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
-        # 防止点击劫持
         X-Frame-Options "DENY"
-        # 防止 MIME 类型嗅探
         X-Content-Type-Options "nosniff"
-        # XSS 保护
         X-XSS-Protection "1; mode=block"
-        # 推荐安全策略
         Referrer-Policy "strict-origin-when-cross-origin"
     }
 

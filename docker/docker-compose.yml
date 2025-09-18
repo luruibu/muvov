@@ -1,3 +1,6 @@
+# MUVOV Docker Compose 配置 - IPv4 模式
+# 适用于大多数部署场景的简化配置
+
 services:
   # Caddy 反向代理和自动 HTTPS
   caddy:
@@ -21,14 +24,10 @@ services:
 
   # PeerJS 信令服务器
   peerjs-server:
-    image: node:18-alpine
+    image: peerjs/peerjs-server
     container_name: muvov-peerjs
     restart: unless-stopped
-    command: sh -c "npm install -g peerjs && exec peerjs --port 9000 --key muvov --path /peerjs"
-    environment:
-      - PORT=9000
-      - KEY=muvov
-      - PATH=/peerjs
+    command: ["--port", "9000", "--key", "muvov", "--path", "/"]
     expose:
       - "9000"
     networks:
@@ -42,20 +41,14 @@ services:
     ports:
       - "3478:3478"
       - "3478:3478/udp"
-      - "5349:5349"
-      - "5349:5349/udp"
       - "49152-65535:49152-65535/udp"
     volumes:
-      - ./turnserver.conf:/etc/coturn/turnserver.conf
-      - caddy_data:/etc/ssl/caddy:ro
+      - ./turnserver-no-tls.conf:/etc/coturn/turnserver.conf
+      - caddy_data:/data/caddy:ro  # 只读访问 Caddy 证书
     environment:
       - DOMAIN=${DOMAIN}
-    depends_on:
-      - caddy
     networks:
       - muvov-network
-
-
 
 volumes:
   caddy_data:
@@ -64,9 +57,3 @@ volumes:
 networks:
   muvov-network:
     driver: bridge
-    enable_ipv6: true
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.20.0.0/16
-        - subnet: 2001:db8::/64
