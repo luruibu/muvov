@@ -128,26 +128,56 @@ done
 
 # 构建 MUVOV 应用
 echo "🔨 构建 MUVOV 应用..."
+
+# 方法1: 尝试本地构建
+echo "   🏗️  尝试本地构建..."
 cd ..
 
-# 检查是否已安装依赖
-if [ ! -d "node_modules" ]; then
-    echo "   📦 安装依赖..."
-    npm install
+if command -v npm &> /dev/null && command -v node &> /dev/null; then
+    # 检查是否已安装依赖
+    if [ ! -d "node_modules" ]; then
+        echo "   📦 安装依赖..."
+        npm install
+    else
+        echo "   ✅ 依赖已存在"
+    fi
+
+    # 构建应用
+    echo "   🏗️  构建应用..."
+    npm run build
+
+    # 检查构建结果
+    if [ ! -d "dist" ]; then
+        echo "   ⚠️  本地构建失败，尝试 Docker 构建..."
+        LOCAL_BUILD_SUCCESS=false
+    else
+        echo "   ✅ 本地构建成功"
+        LOCAL_BUILD_SUCCESS=true
+    fi
 else
-    echo "   ✅ 依赖已存在"
+    echo "   ⚠️  Node.js/npm 不可用，使用 Docker 构建..."
+    LOCAL_BUILD_SUCCESS=false
 fi
 
-# 构建应用
-echo "   🏗️  构建应用..."
-npm run build
-
-# 检查构建结果
-if [ ! -d "dist" ]; then
-    echo "   ❌ 构建失败，未找到 dist 目录"
-    exit 1
-else
-    echo "   ✅ 构建成功"
+# 方法2: 如果本地构建失败，使用 Docker 构建
+if [ "$LOCAL_BUILD_SUCCESS" = false ]; then
+    echo "   🐳 使用 Docker 构建..."
+    cd docker
+    
+    # 使用专用的构建 Dockerfile
+    docker build -f Dockerfile.build -t muvov-builder ..
+    
+    # 运行构建容器
+    docker run --rm -v "$(pwd)/../dist:/app/dist" muvov-builder
+    
+    # 检查构建结果
+    if [ ! -d "../dist" ]; then
+        echo "   ❌ Docker 构建失败"
+        exit 1
+    else
+        echo "   ✅ Docker 构建成功"
+    fi
+    cd ..
 fi
 
 cd docker

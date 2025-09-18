@@ -106,24 +106,27 @@ fi
 echo "5. 重新构建应用..."
 cd ..
 
-# 检查是否已安装依赖
-if [ ! -d "node_modules" ]; then
-    echo "   📦 安装依赖..."
-    npm install
+if command -v npm &> /dev/null && [ -d "node_modules" ] && [ -d "dist" ]; then
+    echo "   ✅ 使用现有构建结果"
 else
-    echo "   ✅ 依赖已存在"
-fi
+    echo "   🏗️  重新构建应用..."
+    
+    # 检查是否已安装依赖
+    if [ ! -d "node_modules" ]; then
+        echo "   📦 安装依赖..."
+        npm install
+    fi
 
-# 构建应用
-echo "   🏗️  构建应用..."
-npm run build
+    # 构建应用
+    npm run build
 
-# 检查构建结果
-if [ ! -d "dist" ]; then
-    echo "   ❌ 构建失败，未找到 dist 目录"
-    exit 1
-else
-    echo "   ✅ 构建成功"
+    # 检查构建结果
+    if [ ! -d "dist" ]; then
+        echo "   ❌ 构建失败，未找到 dist 目录"
+        exit 1
+    else
+        echo "   ✅ 构建成功"
+    fi
 fi
 
 cd docker

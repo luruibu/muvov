@@ -58,17 +58,7 @@ services:
     networks:
       - muvov-network
 
-  # MUVOV 应用构建器（一次性运行）
-  muvov-builder:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile
-    container_name: muvov-builder
-    volumes:
-      - ../dist:/app/dist
-    environment:
-      - DOMAIN=${DOMAIN}
-    command: npm run build
+
 
 volumes:
   caddy_data:

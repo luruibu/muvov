@@ -186,17 +186,22 @@ brew install docker-compose          # macOS
 # 脚本会自动检测并使用正确的命令
 ```
 
-#### 2. "vite: not found" 错误
+#### 2. "npm: not found" 或 "vite: not found" 错误
 ```bash
-# 问题：构建时找不到 vite 命令
-# 解决：运行修复脚本
+# 问题：构建时找不到 npm 或 vite 命令
+# 解决方案：
+
+# 方案1：运行修复脚本
 ./fix-build-issues.sh
 
-# 或手动修复
+# 方案2：手动修复
 cd ..
 npm install
 npm run build
 cd docker
+
+# 方案3：使用 Docker 构建（如果本地 Node.js 有问题）
+# 部署脚本会自动尝试 Docker 构建作为备选方案
 ```
 
 #### 3. 部署前检查
