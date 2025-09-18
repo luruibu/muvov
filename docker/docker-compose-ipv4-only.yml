@@ -1,5 +1,3 @@
-version: '3.8'
-
 # 纯 IPv4 配置 - 适用于不需要容器 IPv6 支持的场景
 # 主机 IPv6 通过端口映射转发到容器 IPv4
 
@@ -26,13 +24,13 @@ services:
 
   # PeerJS 信令服务器
   peerjs-server:
-    image: peerjs/peerjs-server:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.peerjs
     container_name: muvov-peerjs
     restart: unless-stopped
     environment:
       - PORT=9000
-      - EXPIRE_TIMEOUT=5000
-      - ALIVE_TIMEOUT=60000
       - KEY=muvov
       - PATH=/peerjs
     expose:

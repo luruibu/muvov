@@ -1,5 +1,4 @@
 # 生产环境 Docker Compose 配置
-version: '3.8'
 
 services:
   # Caddy 反向代理和自动 HTTPS
@@ -35,16 +34,16 @@ services:
 
   # PeerJS 信令服务器
   peerjs-server:
-    image: peerjs/peerjs-server:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.peerjs
     container_name: muvov-peerjs
     restart: unless-stopped
     environment:
       - PORT=9000
-      - EXPIRE_TIMEOUT=5000
-      - ALIVE_TIMEOUT=60000
       - KEY=${PEERJS_KEY:-muvov}
       - PATH=${PEERJS_PATH:-/peerjs}
-      - CONCURRENT_LIMIT=5000
+      - EXTRA_ARGS=--concurrent_limit 5000
     expose:
       - "9000"
     networks:
