@@ -180,7 +180,7 @@ With these three components, you can quickly deploy a **fully autonomous, self-c
 ### 🏠 Local-First Data Model
 - **Device-Only Storage**: All chat history, contacts, and settings stored exclusively on your local device
 - **No Cloud Sync**: Your data never leaves your device unless you explicitly share it with a peer
-- **Encrypted Local Storage**: Even local data can be encrypted with user-defined passwords
+- **Encrypted Backup**: Export your data with password encryption for device migration
 - **Selective Data Sharing**: You choose exactly what data to share and with whom
 
 ### 🚫 Privacy  Protection Features
