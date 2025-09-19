@@ -3,7 +3,7 @@
 ## Quick Start
 
 ```bash
-./deploy-en.sh your-domain.com
+./deploy.sh your-domain.com
 ```
 
 ## Prerequisites

@@ -3,7 +3,7 @@
 ## 快速开始
 
 ```bash
-./deploy.sh your-domain.com
+./deploy-zh.sh your-domain.com
 ```
 
 ## 前置条件
