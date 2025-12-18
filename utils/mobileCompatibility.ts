@@ -45,6 +45,6 @@ export class MobileCompatibility {
 
   // Check WebRTC support
   static checkWebRTCSupport(): boolean {
-    return !!(window.RTCPeerConnection || window.webkitRTCPeerConnection);
+    return !!(window.RTCPeerConnection || (window as any).webkitRTCPeerConnection);
   }
 }

@@ -403,7 +403,7 @@ export const useFriendChat = (localUsername: string, peer: any, onConnectionEsta
       
       updated.forEach((chat, peerId) => {
         const connection = connectionsRef.current.get(peerId);
-        const isActuallyConnected = connection && connection.open && !connection.destroyed;
+        const isActuallyConnected = connection && connection.open && !(connection as any).destroyed;
         
         if (chat.isConnected !== isActuallyConnected) {
           console.log(`🔄 Chat connection status changed for ${chat.username}: ${isActuallyConnected ? 'connected' : 'disconnected'}`);
