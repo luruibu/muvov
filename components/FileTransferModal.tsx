@@ -154,7 +154,7 @@ export const FileTransferModal: React.FC<FileTransferModalProps> = ({
                       <div className="flex gap-2 ml-4">
                         <button
                           onClick={() => onCancelTransfer(transfer.id)}
-                          className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded text-sm font-medium"
+                          className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-sm text-sm font-medium"
                         >
                           Cancel
                         </button>

@@ -53,7 +53,7 @@ export const ConnectionStatusIndicator: React.FC<ConnectionStatusIndicatorProps>
 
       {/* Connection Status Message */}
       {connectionStatus && (
-        <div className="bg-yellow-600 text-yellow-100 p-2 rounded text-xs">
+        <div className="bg-yellow-600 text-yellow-100 p-2 rounded-sm text-xs">
           {connectionStatus}
         </div>
       )}
@@ -69,7 +69,7 @@ export const ConnectionStatusIndicator: React.FC<ConnectionStatusIndicatorProps>
         <div className="flex gap-1 mt-2">
           <button
             onClick={onReconnect}
-            className="bg-orange-600 hover:bg-orange-500 text-white px-2 py-1 rounded text-xs"
+            className="bg-orange-600 hover:bg-orange-500 text-white px-2 py-1 rounded-sm text-xs"
           >
             Reconnect
           </button>

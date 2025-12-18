@@ -63,7 +63,7 @@ export const CallHistoryModal: React.FC<CallHistoryModalProps> = ({
           {callRecords.length > 0 ? (
             <div className="space-y-2">
               {callRecords.map((record) => (
-                <div key={record.id} className="bg-slate-700 p-3 rounded">
+                <div key={record.id} className="bg-slate-700 p-3 rounded-sm">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-lg">
@@ -95,13 +95,13 @@ export const CallHistoryModal: React.FC<CallHistoryModalProps> = ({
         <div className="flex gap-2 mt-4">
           <button
             onClick={clearHistory}
-            className="flex-1 bg-red-600 hover:bg-red-500 text-white py-2 px-4 rounded"
+            className="flex-1 bg-red-600 hover:bg-red-500 text-white py-2 px-4 rounded-sm"
           >
             Clear History
           </button>
           <button
             onClick={onClose}
-            className="flex-1 bg-slate-600 hover:bg-slate-500 text-white py-2 px-4 rounded"
+            className="flex-1 bg-slate-600 hover:bg-slate-500 text-white py-2 px-4 rounded-sm"
           >
             Close
           </button>

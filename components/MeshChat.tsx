@@ -544,7 +544,7 @@ export const MeshChat: React.FC<MeshChatProps> = ({ identity, onLogout }) => {
                     }, 300);
                   }}
                   placeholder="Type a message..."
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 pr-24 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 pr-24 text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 resize-none"
                   rows={1}
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
@@ -624,7 +624,7 @@ export const MeshChat: React.FC<MeshChatProps> = ({ identity, onLogout }) => {
                     }, 300);
                   }}
                   placeholder="Type a message in the room..."
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 pr-24 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 pr-24 text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 resize-none"
                   rows={1}
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">

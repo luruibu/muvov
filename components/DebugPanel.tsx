@@ -108,19 +108,19 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ isVisible, onClose }) =>
                 const info = getStorageInfo();
                 return (
                   <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="bg-slate-700 p-3 rounded">
+                    <div className="bg-slate-700 p-3 rounded-sm">
                       <div className="text-slate-400">Chat Conversations</div>
                       <div className="text-white text-xl font-bold">{info.chatHistory}</div>
                     </div>
-                    <div className="bg-slate-700 p-3 rounded">
+                    <div className="bg-slate-700 p-3 rounded-sm">
                       <div className="text-slate-400">Total Messages</div>
                       <div className="text-white text-xl font-bold">{info.totalMessages}</div>
                     </div>
-                    <div className="bg-slate-700 p-3 rounded">
+                    <div className="bg-slate-700 p-3 rounded-sm">
                       <div className="text-slate-400">Call Records</div>
                       <div className="text-white text-xl font-bold">{info.callRecords}</div>
                     </div>
-                    <div className="bg-slate-700 p-3 rounded">
+                    <div className="bg-slate-700 p-3 rounded-sm">
                       <div className="text-slate-400">Storage Used</div>
                       <div className="text-white text-xl font-bold">{Math.round(info.storageUsed / 1024)} KB</div>
                     </div>
@@ -136,19 +136,19 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({ isVisible, onClose }) =>
               <div className="grid grid-cols-1 gap-2">
                 <button
                   onClick={() => runCommand('clearFriends')}
-                  className="bg-red-600 hover:bg-red-500 text-white p-2 rounded text-sm text-left"
+                  className="bg-red-600 hover:bg-red-500 text-white p-2 rounded-sm text-sm text-left"
                 >
                   🗑️ Clear All Friends Data
                 </button>
                 <button
                   onClick={() => runCommand('clearChatHistory')}
-                  className="bg-red-600 hover:bg-red-500 text-white p-2 rounded text-sm text-left"
+                  className="bg-red-600 hover:bg-red-500 text-white p-2 rounded-sm text-sm text-left"
                 >
                   💬 Clear Chat History
                 </button>
                 <button
                   onClick={() => runCommand('clearCallHistory')}
-                  className="bg-red-600 hover:bg-red-500 text-white p-2 rounded text-sm text-left"
+                  className="bg-red-600 hover:bg-red-500 text-white p-2 rounded-sm text-sm text-left"
                 >
                   📞 Clear Call History
                 </button>

@@ -313,14 +313,14 @@ export const FriendsList: React.FC<FriendsListProps> = ({
       <div className="mb-3">
         <button
           onClick={() => setShowAddFriend(!showAddFriend)}
-          className="w-full flex items-center justify-between p-2 bg-slate-700 hover:bg-slate-600 rounded text-xs text-slate-300"
+          className="w-full flex items-center justify-between p-2 bg-slate-700 hover:bg-slate-600 rounded-sm text-xs text-slate-300"
         >
           <span>➕ Add Friend</span>
           <span>{showAddFriend ? '▼' : '▶'}</span>
         </button>
         
         {showAddFriend && (
-          <div className="mt-2 space-y-2 p-2 bg-slate-750 rounded">
+          <div className="mt-2 space-y-2 p-2 bg-slate-750 rounded-sm">
             {/* QR Code Buttons */}
             <div className="flex gap-2">
               <button
@@ -328,7 +328,7 @@ export const FriendsList: React.FC<FriendsListProps> = ({
                   setQrMode('generate');
                   setShowQRModal(true);
                 }}
-                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 px-3 rounded text-xs flex items-center justify-center gap-1"
+                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 px-3 rounded-sm text-xs flex items-center justify-center gap-1"
               >
                 📱 My QR Code
               </button>
@@ -337,7 +337,7 @@ export const FriendsList: React.FC<FriendsListProps> = ({
                   setQrMode('scan');
                   setShowQRModal(true);
                 }}
-                className="flex-1 bg-purple-600 hover:bg-purple-500 text-white py-2 px-3 rounded text-xs flex items-center justify-center gap-1"
+                className="flex-1 bg-purple-600 hover:bg-purple-500 text-white py-2 px-3 rounded-sm text-xs flex items-center justify-center gap-1"
               >
                 📷 Scan QR Code
               </button>
@@ -353,7 +353,7 @@ export const FriendsList: React.FC<FriendsListProps> = ({
                   setError('');
                 }}
                 placeholder="Peer ID"
-                className="flex-1 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-slate-100 text-xs"
+                className="flex-1 px-2 py-1 bg-slate-700 border border-slate-600 rounded-sm text-slate-100 text-xs"
               />
               <input
                 type="text"
@@ -363,7 +363,7 @@ export const FriendsList: React.FC<FriendsListProps> = ({
                   setError('');
                 }}
                 placeholder="Username"
-                className="flex-1 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-slate-100 text-xs"
+                className="flex-1 px-2 py-1 bg-slate-700 border border-slate-600 rounded-sm text-slate-100 text-xs"
               />
             </div>
             {error && (
@@ -374,7 +374,7 @@ export const FriendsList: React.FC<FriendsListProps> = ({
             )}
             <button
               onClick={addFriend}
-              className="w-full bg-green-600 hover:bg-green-500 text-white px-2 py-1 rounded text-xs"
+              className="w-full bg-green-600 hover:bg-green-500 text-white px-2 py-1 rounded-sm text-xs"
             >
               Add Friend
             </button>
@@ -390,7 +390,7 @@ export const FriendsList: React.FC<FriendsListProps> = ({
         {friends.length > 0 ? (
           <div className="space-y-2">
             {friends.map((friend) => (
-              <div key={friend.peerId} className="flex items-center gap-2 p-2 bg-slate-700 rounded">
+              <div key={friend.peerId} className="flex items-center gap-2 p-2 bg-slate-700 rounded-sm">
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full transition-colors duration-300 ${
@@ -417,7 +417,7 @@ export const FriendsList: React.FC<FriendsListProps> = ({
 
                 <button
                   onClick={() => onStartChat && onStartChat(friend.peerId, friend.username)}
-                  className="bg-sky-600 hover:bg-sky-500 text-white px-2 py-1 rounded text-xs"
+                  className="bg-sky-600 hover:bg-sky-500 text-white px-2 py-1 rounded-sm text-xs"
                   title="Send message"
                 >
                   💬
@@ -448,7 +448,7 @@ export const FriendsList: React.FC<FriendsListProps> = ({
                 </button>
                 <button
                   onClick={() => removeFriend(friend.peerId)}
-                  className="bg-red-600 hover:bg-red-500 text-white px-2 py-1 rounded text-xs"
+                  className="bg-red-600 hover:bg-red-500 text-white px-2 py-1 rounded-sm text-xs"
                 >
                   ❌
                 </button>

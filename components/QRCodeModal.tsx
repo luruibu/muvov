@@ -189,7 +189,7 @@ export const QRCodeModal: React.FC<QRCodeModalProps> = ({
                 <img 
                   src={qrCodeUrl} 
                   alt="Friend QR Code" 
-                  className="mx-auto mb-3 bg-white p-2 rounded"
+                  className="mx-auto mb-3 bg-white p-2 rounded-sm"
                 />
                 <p className="text-slate-300 text-sm mb-3">
                   Let your friend scan this QR code to add you
@@ -201,7 +201,7 @@ export const QRCodeModal: React.FC<QRCodeModalProps> = ({
                     link.href = qrCodeUrl;
                     link.click();
                   }}
-                  className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded text-sm"
+                  className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-sm text-sm"
                 >
                   Save QR Code
                 </button>
@@ -225,7 +225,7 @@ export const QRCodeModal: React.FC<QRCodeModalProps> = ({
                       setScanError('Please allow camera access in your browser settings');
                     }
                   }}
-                  className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded text-sm"
+                  className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-sm text-sm"
                 >
                   Grant Camera Access
                 </button>
@@ -234,7 +234,7 @@ export const QRCodeModal: React.FC<QRCodeModalProps> = ({
               <>
                 <video
                   ref={videoRef}
-                  className="w-full h-64 bg-slate-700 rounded mb-3"
+                  className="w-full h-64 bg-slate-700 rounded-sm mb-3"
                   playsInline
                   muted
                 />

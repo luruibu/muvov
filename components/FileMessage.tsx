@@ -22,7 +22,7 @@ export const FileMessage: React.FC<FileMessageProps> = ({ transferId, isSender }
 
   if (!transfer) {
     return (
-      <div className={`p-3 rounded-lg max-w-xs break-words ${isSender ? 'bg-sky-600 text-white self-end' : 'bg-slate-700 text-slate-200 self-start'}`}>
+      <div className={`p-3 rounded-lg max-w-xs wrap-break-word ${isSender ? 'bg-sky-600 text-white self-end' : 'bg-slate-700 text-slate-200 self-start'}`}>
         <p className="text-sm">文件传输信息加载中...</p>
       </div>
     );
@@ -71,7 +71,7 @@ export const FileMessage: React.FC<FileMessageProps> = ({ transferId, isSender }
                 <p className="text-sm">不支持预览</p>
               </div>
             )}
-            <button onClick={handleSave} className="mt-2 w-full bg-sky-500 hover:bg-sky-400 text-white px-3 py-1 rounded text-sm font-medium">
+            <button onClick={handleSave} className="mt-2 w-full bg-sky-500 hover:bg-sky-400 text-white px-3 py-1 rounded-sm text-sm font-medium">
               保存
             </button>
           </>
@@ -85,7 +85,7 @@ export const FileMessage: React.FC<FileMessageProps> = ({ transferId, isSender }
   };
 
   return (
-    <div className={`p-3 rounded-lg max-w-xs break-words ${isSender ? 'bg-sky-700 text-white self-end' : 'bg-slate-600 text-slate-200 self-start'}`}>
+    <div className={`p-3 rounded-lg max-w-xs wrap-break-word ${isSender ? 'bg-sky-700 text-white self-end' : 'bg-slate-600 text-slate-200 self-start'}`}>
       <div className="flex items-center gap-2 mb-2">
         <span className="text-2xl">📄</span>
         <div>

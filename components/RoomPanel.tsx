@@ -34,12 +34,12 @@ export const RoomPanel: React.FC<RoomPanelProps> = ({
     return (
       <div className="space-y-4">
         {/* Current Room Info */}
-        <div className="bg-slate-700 p-3 rounded">
+        <div className="bg-slate-700 p-3 rounded-sm">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-slate-100 font-medium">{currentRoom.roomName}</h3>
             <button
               onClick={onLeaveRoom}
-              className="bg-red-600 hover:bg-red-500 text-white px-2 py-1 rounded text-xs"
+              className="bg-red-600 hover:bg-red-500 text-white px-2 py-1 rounded-sm text-xs"
             >
               Leave
             </button>
@@ -56,7 +56,7 @@ export const RoomPanel: React.FC<RoomPanelProps> = ({
           </h4>
           <div className="space-y-1">
             {Array.from(currentRoom.members.values()).map(member => (
-              <div key={member.peerId} className="flex items-center gap-2 p-2 bg-slate-700 rounded">
+              <div key={member.peerId} className="flex items-center gap-2 p-2 bg-slate-700 rounded-sm">
                 <div className={`w-2 h-2 rounded-full ${
                   member.isAlive ? 'bg-green-500' : 'bg-gray-500'
                 }`}></div>
@@ -74,7 +74,7 @@ export const RoomPanel: React.FC<RoomPanelProps> = ({
           <div>
             <button
               onClick={() => setShowInviteModal(true)}
-              className="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 px-3 rounded text-sm"
+              className="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 px-3 rounded-sm text-sm"
             >
               Invite Friends
             </button>
@@ -88,7 +88,7 @@ export const RoomPanel: React.FC<RoomPanelProps> = ({
               <h3 className="text-slate-100 font-medium mb-3">Invite Friends</h3>
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {friends.filter(f => !currentRoom.members.has(f.peerId)).map(friend => (
-                  <div key={friend.peerId} className="flex items-center justify-between p-2 bg-slate-700 rounded">
+                  <div key={friend.peerId} className="flex items-center justify-between p-2 bg-slate-700 rounded-sm">
                     <div className="flex items-center gap-2">
                       <div className={`w-2 h-2 rounded-full ${
                         friend.isOnline ? 'bg-green-500' : 'bg-gray-500'
@@ -97,7 +97,7 @@ export const RoomPanel: React.FC<RoomPanelProps> = ({
                     </div>
                     <button
                       onClick={() => handleInviteFriend(friend)}
-                      className="bg-green-600 hover:bg-green-500 text-white px-2 py-1 rounded text-xs"
+                      className="bg-green-600 hover:bg-green-500 text-white px-2 py-1 rounded-sm text-xs"
                     >
                       Invite
                     </button>
@@ -106,7 +106,7 @@ export const RoomPanel: React.FC<RoomPanelProps> = ({
               </div>
               <button
                 onClick={() => setShowInviteModal(false)}
-                className="w-full mt-3 bg-slate-600 hover:bg-slate-500 text-white py-2 px-3 rounded text-sm"
+                className="w-full mt-3 bg-slate-600 hover:bg-slate-500 text-white py-2 px-3 rounded-sm text-sm"
               >
                 Close
               </button>
@@ -128,12 +128,12 @@ export const RoomPanel: React.FC<RoomPanelProps> = ({
             value={newRoomName}
             onChange={(e) => setNewRoomName(e.target.value)}
             placeholder="Room name"
-            className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-slate-100 text-sm"
+            className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-sm text-slate-100 text-sm"
           />
           <button
             onClick={handleCreateRoom}
             disabled={!newRoomName.trim()}
-            className="w-full bg-green-600 hover:bg-green-500 disabled:bg-slate-500 text-white py-2 px-3 rounded text-sm"
+            className="w-full bg-green-600 hover:bg-green-500 disabled:bg-slate-500 text-white py-2 px-3 rounded-sm text-sm"
           >
             Create Room
           </button>

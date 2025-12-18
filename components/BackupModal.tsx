@@ -101,24 +101,24 @@ export const BackupModal: React.FC<BackupModalProps> = ({ isVisible, onClose, on
         </div>
 
         {error && (
-          <div className="bg-red-600 text-white p-2 rounded mb-4 text-sm">{error}</div>
+          <div className="bg-red-600 text-white p-2 rounded-sm mb-4 text-sm">{error}</div>
         )}
         
         {success && (
-          <div className="bg-green-600 text-white p-2 rounded mb-4 text-sm">{success}</div>
+          <div className="bg-green-600 text-white p-2 rounded-sm mb-4 text-sm">{success}</div>
         )}
 
         {mode === 'menu' && (
           <div className="space-y-3">
             <button
               onClick={() => setMode('backup')}
-              className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 px-4 rounded text-sm"
+              className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 px-4 rounded-sm text-sm"
             >
               📦 Create Encrypted Backup
             </button>
             <button
               onClick={() => setMode('restore')}
-              className="w-full bg-green-600 hover:bg-green-500 text-white py-3 px-4 rounded text-sm"
+              className="w-full bg-green-600 hover:bg-green-500 text-white py-3 px-4 rounded-sm text-sm"
             >
               📥 Restore from Backup
             </button>
@@ -137,7 +137,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({ isVisible, onClose, on
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter a strong password"
-                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-slate-100 text-sm"
+                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-sm text-slate-100 text-sm"
               />
             </div>
             <div>
@@ -147,20 +147,20 @@ export const BackupModal: React.FC<BackupModalProps> = ({ isVisible, onClose, on
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirm password"
-                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-slate-100 text-sm"
+                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-sm text-slate-100 text-sm"
               />
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => setMode('menu')}
-                className="flex-1 bg-slate-600 hover:bg-slate-500 text-white py-2 px-4 rounded text-sm"
+                className="flex-1 bg-slate-600 hover:bg-slate-500 text-white py-2 px-4 rounded-sm text-sm"
               >
                 Back
               </button>
               <button
                 onClick={handleCreateBackup}
                 disabled={loading}
-                className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-500 text-white py-2 px-4 rounded text-sm"
+                className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-500 text-white py-2 px-4 rounded-sm text-sm"
               >
                 {loading ? 'Creating...' : 'Create Backup'}
               </button>
@@ -176,7 +176,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({ isVisible, onClose, on
                 type="file"
                 accept=".mcb"
                 onChange={(e) => setFile(e.target.files?.[0] || null)}
-                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-slate-100 text-sm"
+                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-sm text-slate-100 text-sm"
               />
             </div>
             <div>
@@ -186,23 +186,23 @@ export const BackupModal: React.FC<BackupModalProps> = ({ isVisible, onClose, on
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter backup password"
-                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-slate-100 text-sm"
+                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-sm text-slate-100 text-sm"
               />
             </div>
-            <div className="bg-yellow-600 text-yellow-100 p-2 rounded text-xs">
+            <div className="bg-yellow-600 text-yellow-100 p-2 rounded-sm text-xs">
               ⚠️ This will replace your current data. Make sure to backup first!
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => setMode('menu')}
-                className="flex-1 bg-slate-600 hover:bg-slate-500 text-white py-2 px-4 rounded text-sm"
+                className="flex-1 bg-slate-600 hover:bg-slate-500 text-white py-2 px-4 rounded-sm text-sm"
               >
                 Back
               </button>
               <button
                 onClick={handleRestoreBackup}
                 disabled={loading}
-                className="flex-1 bg-green-600 hover:bg-green-500 disabled:bg-slate-500 text-white py-2 px-4 rounded text-sm"
+                className="flex-1 bg-green-600 hover:bg-green-500 disabled:bg-slate-500 text-white py-2 px-4 rounded-sm text-sm"
               >
                 {loading ? 'Restoring...' : 'Restore'}
               </button>

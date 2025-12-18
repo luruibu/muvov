@@ -230,14 +230,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isVisible, onClose
                   setEditingPeerServer(null);
                   setEditingSTUNServer(null);
                 }}
-                className="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded text-sm"
+                className="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded-sm text-sm"
               >
                 + Add Server
               </button>
             </div>
 
             {showAddForm && activeTab === 'peer' && (
-              <div className="bg-slate-700 p-4 rounded space-y-3">
+              <div className="bg-slate-700 p-4 rounded-sm space-y-3">
                 <h5 className="text-slate-300 font-medium">Add PeerJS Server</h5>
                 <div className="grid grid-cols-2 gap-3">
                   <input
@@ -245,35 +245,35 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isVisible, onClose
                     placeholder="Server Name"
                     value={newPeerServer.name}
                     onChange={(e) => setNewPeerServer(prev => ({ ...prev, name: e.target.value }))}
-                    className="px-3 py-2 bg-slate-600 border border-slate-500 rounded text-slate-100 text-sm"
+                    className="px-3 py-2 bg-slate-600 border border-slate-500 rounded-sm text-slate-100 text-sm"
                   />
                   <input
                     type="text"
                     placeholder="Host (e.g., peerjs.example.com)"
                     value={newPeerServer.host}
                     onChange={(e) => setNewPeerServer(prev => ({ ...prev, host: e.target.value }))}
-                    className="px-3 py-2 bg-slate-600 border border-slate-500 rounded text-slate-100 text-sm"
+                    className="px-3 py-2 bg-slate-600 border border-slate-500 rounded-sm text-slate-100 text-sm"
                   />
                   <input
                     type="number"
                     placeholder="Port"
                     value={newPeerServer.port}
                     onChange={(e) => setNewPeerServer(prev => ({ ...prev, port: parseInt(e.target.value) || 443 }))}
-                    className="px-3 py-2 bg-slate-600 border border-slate-500 rounded text-slate-100 text-sm"
+                    className="px-3 py-2 bg-slate-600 border border-slate-500 rounded-sm text-slate-100 text-sm"
                   />
                   <input
                     type="text"
                     placeholder="Path (e.g., /peerjs)"
                     value={newPeerServer.path}
                     onChange={(e) => setNewPeerServer(prev => ({ ...prev, path: e.target.value }))}
-                    className="px-3 py-2 bg-slate-600 border border-slate-500 rounded text-slate-100 text-sm"
+                    className="px-3 py-2 bg-slate-600 border border-slate-500 rounded-sm text-slate-100 text-sm"
                   />
                   <input
                     type="text"
                     placeholder="Key (optional, e.g., peerjs)"
                     value={newPeerServer.key}
                     onChange={(e) => setNewPeerServer(prev => ({ ...prev, key: e.target.value }))}
-                    className="px-3 py-2 bg-slate-600 border border-slate-500 rounded text-slate-100 text-sm col-span-2"
+                    className="px-3 py-2 bg-slate-600 border border-slate-500 rounded-sm text-slate-100 text-sm col-span-2"
                   />
                 </div>
                 <label className="flex items-center gap-2 text-slate-300 text-sm">
@@ -287,13 +287,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isVisible, onClose
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowAddForm(false)}
-                    className="bg-slate-600 hover:bg-slate-500 text-white px-3 py-2 rounded text-sm"
+                    className="bg-slate-600 hover:bg-slate-500 text-white px-3 py-2 rounded-sm text-sm"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={addPeerServer}
-                    className="bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded text-sm"
+                    className="bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded-sm text-sm"
                   >
                     Add Server
                   </button>
@@ -303,7 +303,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isVisible, onClose
 
             <div className="space-y-2">
               {peerServers.map(server => (
-                <div key={server.id} className="bg-slate-700 rounded">
+                <div key={server.id} className="bg-slate-700 rounded-sm">
                   {editingPeerServer === server.id ? (
                     // 编辑表单
                     <div className="p-4 space-y-3">
@@ -314,35 +314,35 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isVisible, onClose
                           placeholder="Server Name"
                           value={editPeerServer.name}
                           onChange={(e) => setEditPeerServer(prev => ({ ...prev, name: e.target.value }))}
-                          className="px-3 py-2 bg-slate-600 border border-slate-500 rounded text-slate-100 text-sm"
+                          className="px-3 py-2 bg-slate-600 border border-slate-500 rounded-sm text-slate-100 text-sm"
                         />
                         <input
                           type="text"
                           placeholder="Host (e.g., peerjs.example.com)"
                           value={editPeerServer.host}
                           onChange={(e) => setEditPeerServer(prev => ({ ...prev, host: e.target.value }))}
-                          className="px-3 py-2 bg-slate-600 border border-slate-500 rounded text-slate-100 text-sm"
+                          className="px-3 py-2 bg-slate-600 border border-slate-500 rounded-sm text-slate-100 text-sm"
                         />
                         <input
                           type="number"
                           placeholder="Port"
                           value={editPeerServer.port}
                           onChange={(e) => setEditPeerServer(prev => ({ ...prev, port: parseInt(e.target.value) || 443 }))}
-                          className="px-3 py-2 bg-slate-600 border border-slate-500 rounded text-slate-100 text-sm"
+                          className="px-3 py-2 bg-slate-600 border border-slate-500 rounded-sm text-slate-100 text-sm"
                         />
                         <input
                           type="text"
                           placeholder="Path (e.g., /peerjs)"
                           value={editPeerServer.path}
                           onChange={(e) => setEditPeerServer(prev => ({ ...prev, path: e.target.value }))}
-                          className="px-3 py-2 bg-slate-600 border border-slate-500 rounded text-slate-100 text-sm"
+                          className="px-3 py-2 bg-slate-600 border border-slate-500 rounded-sm text-slate-100 text-sm"
                         />
                         <input
                           type="text"
                           placeholder="Key (optional, e.g., peerjs)"
                           value={editPeerServer.key}
                           onChange={(e) => setEditPeerServer(prev => ({ ...prev, key: e.target.value }))}
-                          className="px-3 py-2 bg-slate-600 border border-slate-500 rounded text-slate-100 text-sm col-span-2"
+                          className="px-3 py-2 bg-slate-600 border border-slate-500 rounded-sm text-slate-100 text-sm col-span-2"
                         />
                       </div>
                       <label className="flex items-center gap-2 text-slate-300 text-sm">
@@ -356,13 +356,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isVisible, onClose
                       <div className="flex gap-2">
                         <button
                           onClick={cancelEdit}
-                          className="bg-slate-600 hover:bg-slate-500 text-white px-3 py-2 rounded text-sm"
+                          className="bg-slate-600 hover:bg-slate-500 text-white px-3 py-2 rounded-sm text-sm"
                         >
                           Cancel
                         </button>
                         <button
                           onClick={saveEditPeerServer}
-                          className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded text-sm"
+                          className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-sm text-sm"
                         >
                           Save Changes
                         </button>
@@ -425,14 +425,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isVisible, onClose
                   setEditingPeerServer(null);
                   setEditingSTUNServer(null);
                 }}
-                className="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded text-sm"
+                className="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded-sm text-sm"
               >
                 + Add Server
               </button>
             </div>
 
             {showAddForm && activeTab === 'stun' && (
-              <div className="bg-slate-700 p-4 rounded space-y-3">
+              <div className="bg-slate-700 p-4 rounded-sm space-y-3">
                 <h5 className="text-slate-300 font-medium">Add STUN Server</h5>
                 <div className="grid grid-cols-1 gap-3">
                   <input
@@ -440,26 +440,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isVisible, onClose
                     placeholder="Server Name"
                     value={newSTUNServer.name}
                     onChange={(e) => setNewSTUNServer(prev => ({ ...prev, name: e.target.value }))}
-                    className="px-3 py-2 bg-slate-600 border border-slate-500 rounded text-slate-100 text-sm"
+                    className="px-3 py-2 bg-slate-600 border border-slate-500 rounded-sm text-slate-100 text-sm"
                   />
                   <input
                     type="text"
                     placeholder="STUN URL (e.g., stun:stun.example.com:3478)"
                     value={newSTUNServer.url}
                     onChange={(e) => setNewSTUNServer(prev => ({ ...prev, url: e.target.value }))}
-                    className="px-3 py-2 bg-slate-600 border border-slate-500 rounded text-slate-100 text-sm"
+                    className="px-3 py-2 bg-slate-600 border border-slate-500 rounded-sm text-slate-100 text-sm"
                   />
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowAddForm(false)}
-                    className="bg-slate-600 hover:bg-slate-500 text-white px-3 py-2 rounded text-sm"
+                    className="bg-slate-600 hover:bg-slate-500 text-white px-3 py-2 rounded-sm text-sm"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={addSTUNServer}
-                    className="bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded text-sm"
+                    className="bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded-sm text-sm"
                   >
                     Add Server
                   </button>
@@ -469,7 +469,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isVisible, onClose
 
             <div className="space-y-2">
               {stunServers.map(server => (
-                <div key={server.id} className="bg-slate-700 rounded">
+                <div key={server.id} className="bg-slate-700 rounded-sm">
                   {editingSTUNServer === server.id ? (
                     // 编辑表单
                     <div className="p-4 space-y-3">
@@ -480,26 +480,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isVisible, onClose
                           placeholder="Server Name"
                           value={editSTUNServer.name}
                           onChange={(e) => setEditSTUNServer(prev => ({ ...prev, name: e.target.value }))}
-                          className="px-3 py-2 bg-slate-600 border border-slate-500 rounded text-slate-100 text-sm"
+                          className="px-3 py-2 bg-slate-600 border border-slate-500 rounded-sm text-slate-100 text-sm"
                         />
                         <input
                           type="text"
                           placeholder="STUN URL (e.g., stun:stun.example.com:3478)"
                           value={editSTUNServer.url}
                           onChange={(e) => setEditSTUNServer(prev => ({ ...prev, url: e.target.value }))}
-                          className="px-3 py-2 bg-slate-600 border border-slate-500 rounded text-slate-100 text-sm"
+                          className="px-3 py-2 bg-slate-600 border border-slate-500 rounded-sm text-slate-100 text-sm"
                         />
                       </div>
                       <div className="flex gap-2">
                         <button
                           onClick={cancelEdit}
-                          className="bg-slate-600 hover:bg-slate-500 text-white px-3 py-2 rounded text-sm"
+                          className="bg-slate-600 hover:bg-slate-500 text-white px-3 py-2 rounded-sm text-sm"
                         >
                           Cancel
                         </button>
                         <button
                           onClick={saveEditSTUNServer}
-                          className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded text-sm"
+                          className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-sm text-sm"
                         >
                           Save Changes
                         </button>
