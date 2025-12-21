@@ -1,0 +1,67 @@
+{
+  "name": "muvov",
+  "version": "1.0.0",
+  "description": "A peer-to-peer encrypted chat application built with WebRTC, supporting message caching, offline sync, and audio/video calls",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "tsc --noEmit",
+    "serve": "npm run build && npx serve dist -p 3000 -s",
+    "build:electron": "npm run build && cp electron-package.json package.json && npm install && npm run dist",
+    "build:server": "npm run build && cp server-package.json package.json && npm install && npm run build-server"
+  },
+  "keywords": [
+    "muvov",
+    "webrtc",
+    "p2p",
+    "chat",
+    "secure",
+    "encryption",
+    "end-to-end",
+    "video-call",
+    "audio-call",
+    "offline-sync",
+    "message-caching",
+    "file-sharing",
+    "qr-code",
+    "browser-only",
+    "decentralized",
+    "privacy",
+    "react",
+    "typescript"
+  ],
+  "author": "luruibu",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/luruibu/muvov.git"
+  },
+  "bugs": {
+    "url": "https://github.com/luruibu/muvov/issues"
+  },
+  "homepage": "https://github.com/luruibu/muvov#readme",
+  "dependencies": {
+    "@types/peerjs": "^1.1.0",
+    "peerjs": "^1.5.5",
+    "qr-scanner": "^1.4.2",
+    "qrcode": "^1.5.4",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.18",
+    "@types/node": "^22.14.0",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "electron": "^39.2.7",
+    "electron-builder": "^26.0.12",
+    "express": "^5.2.1",
+    "postcss": "^8.5.6",
+    "serve": "^14.2.5",
+    "tailwindcss": "^4.1.18",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.0"
+  }
+}

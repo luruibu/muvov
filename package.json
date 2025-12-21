@@ -7,7 +7,18 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "serve": "npm run build && npx serve dist -p 3000 -s",
+    "electron": "npm run build && electron electron-main.js",
+    "electron-dev": "electron electron-main.js",
+    "build:electron": "npm run build && electron-builder",
+    "build:electron-unsigned": "npm run build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder",
+    "build:win": "npm run build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win",
+    "build:mac": "npm run build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac",
+    "build:linux": "npm run build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --linux",
+    "build:all": "npm run build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win --mac --linux",
+    "build:simple": "node build-simple.js",
+    "build:server": "npm run build && cp server-package.json package.json && npm install && npm run build-server"
   },
   "keywords": [
     "muvov",
@@ -41,6 +52,7 @@
   "homepage": "https://github.com/luruibu/muvov#readme",
   "dependencies": {
     "@types/peerjs": "^1.1.0",
+    "express": "^5.2.1",
     "peerjs": "^1.5.5",
     "qr-scanner": "^1.4.2",
     "qrcode": "^1.5.4",
@@ -52,9 +64,90 @@
     "@types/node": "^22.14.0",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "cross-env": "^10.1.0",
+    "electron": "^39.2.7",
+    "electron-builder": "^26.0.12",
     "postcss": "^8.5.6",
+    "serve": "^14.2.5",
     "tailwindcss": "^4.1.18",
     "typescript": "^5.9.3",
     "vite": "^7.3.0"
+  },
+  "main": "electron-main.js",
+  "build": {
+    "appId": "com.muvov.chat",
+    "productName": "MUVOV Chat",
+    "directories": {
+      "output": "electron-dist"
+    },
+    "files": [
+      "dist/**/*",
+      "electron-main.js",
+      "assets/icons/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "dist",
+        "to": "app/dist"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "dir",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "requestedExecutionLevel": "asInvoker",
+      "verifyUpdateCodeSignature": false,
+      "icon": "assets/icons/win/icon.ico"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "category": "public.app-category.social-networking",
+      "icon": "assets/icons/mac/icon.icns"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        },
+        {
+          "target": "deb",
+          "arch": ["x64"]
+        },
+        {
+          "target": "rpm",
+          "arch": ["x64"]
+        }
+      ],
+      "category": "Network",
+      "icon": "assets/icons/png/512x512.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "MUVOV Chat"
+    }
   }
 }

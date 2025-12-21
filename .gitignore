@@ -15,6 +15,17 @@ build/
 .env.test.local
 .env.production.local
 
+# Code signing certificates (SECURITY SENSITIVE)
+certs/*.p12
+certs/*.pfx
+certs/*.crt
+certs/*.key
+certs/*.pem
+
+# Electron build outputs
+electron-dist/
+electron-simple/
+
 # IDE files
 .vscode/
 .idea/
